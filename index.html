@@ -1,0 +1,1375 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="color-scheme" content="light dark">
+<style>
+  :root { padding-top: env(safe-area-inset-top, 0px); padding-bottom: env(safe-area-inset-bottom, 0px); }
+  [hidden] { display: none !important; }
+</style>
+<title>WO240128A 3D Model</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Archivo:ital,wght@0,400;0,500;0,700;1,700&family=IBM+Plex+Mono:wght@400;500&display=swap">
+<style>
+/* Layout: one column like a drawing sheet — the 3D viewport is the title block's hero, chip rows operate it, mono tables carry the numbers. */
+:root{
+  /* PerchWerks light (perchwerks-style tokens) */
+  --bg:#faf8fc; --surface:#ffffff; --fg:#290136; --muted:#6e5c77; --line:#e7e1ee;
+  --accent:#5e3a9c; --accent-ink:#ffffff; --chip:#f2eff7; --chip-on:#efeaf7;
+  --va:#1f78c1; --aa:#e0781f; --bg3d:#ece8f2; --grid:#d4cce0; --grid2:#bdb1cf; --edge:#290136;
+  --code-bg:#f2eff7; --ok:#2e8b57;
+  --logo-mark:#5e3a9c; --logo-type:#290136; --brand-plate:#290136; --brand-plate-ink:#ffffff;
+  --font-body:"Archivo",system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;
+  --font-display:"Archivo","Arial Narrow",system-ui,sans-serif;
+  --font-mono:"IBM Plex Mono",ui-monospace,"SF Mono",Menlo,Consolas,monospace;
+}
+@media (prefers-color-scheme: dark){
+  :root:not([data-theme="light"]){
+    --bg:#1d0924; --surface:#24102b; --fg:#f6f1fa; --muted:#a08fad; --line:#372444;
+    --accent:#9e89c4; --accent-ink:#1d0924; --chip:#2c1735; --chip-on:#2e1b3d;
+    --va:#5aa9ec; --aa:#f0954a; --bg3d:#16021d; --grid:#2e1b3d; --grid2:#40294f; --edge:#0b0010;
+    --code-bg:#16021d; --ok:#4fd1a5; color-scheme:dark;
+    --logo-mark:#9e89c4; --logo-type:#ffffff; --brand-plate:#5e3a9c; --brand-plate-ink:#ffffff;
+  }
+}
+:root[data-theme="dark"]{
+  --bg:#1d0924; --surface:#24102b; --fg:#f6f1fa; --muted:#a08fad; --line:#372444;
+  --accent:#9e89c4; --accent-ink:#1d0924; --chip:#2c1735; --chip-on:#2e1b3d;
+  --va:#5aa9ec; --aa:#f0954a; --bg3d:#16021d; --grid:#2e1b3d; --grid2:#40294f; --edge:#0b0010;
+  --code-bg:#16021d; --ok:#4fd1a5; color-scheme:dark;
+  --logo-mark:#9e89c4; --logo-type:#ffffff; --brand-plate:#5e3a9c; --brand-plate-ink:#ffffff;
+}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--fg);font-family:var(--font-body);font-size:15px;line-height:1.5;-webkit-text-size-adjust:100%}
+.wrap{max-width:780px;margin:0 auto;padding-block:14px 48px;padding-inline:16px;display:flex;flex-direction:column;gap:18px}
+header{display:flex;flex-direction:column;gap:6px}
+.eyebrow{font-size:11.5px;letter-spacing:.12em;text-transform:uppercase;color:var(--muted);font-weight:500}
+h1{font-family:var(--font-display);font-weight:700;font-size:clamp(28px,6vw,38px);line-height:1.05;margin:0;letter-spacing:-.01em;text-wrap:balance}
+h1 small{font-family:var(--font-body);font-weight:400;font-size:.5em;color:var(--muted);letter-spacing:0;margin-left:.35em}
+.keys{display:flex;flex-wrap:wrap;gap:6px 14px;font-family:var(--font-mono);font-size:12.5px;color:var(--muted);font-variant-numeric:tabular-nums}
+.keys b{color:var(--fg);font-weight:500}
+
+.viewer{position:relative;background:var(--bg3d);border:1px solid var(--line);border-radius:8px;overflow:hidden;height:min(64vh,600px);min-height:320px;max-width:100%}
+.viewer canvas#c{display:block;width:100%;height:100%;touch-action:none;outline:none;cursor:grab}
+.viewer canvas#c:active{cursor:grabbing}
+.flatwrap{position:absolute;inset:0;display:grid;place-items:center;padding:52px 12px 56px}
+.flatwrap canvas{width:100%;max-width:720px;height:auto;image-rendering:pixelated;image-rendering:crisp-edges;border-radius:3px;box-shadow:0 0 0 1px var(--line)}
+.overlay{position:absolute;display:flex;gap:6px;flex-wrap:wrap;pointer-events:none}
+.overlay > *{pointer-events:auto}
+.ov-tl{top:10px;left:10px;right:10px}
+.ov-br{bottom:10px;right:10px}
+.ov-bl{bottom:16px;left:12px;right:200px;font-size:12px;color:var(--muted);transition:opacity .6s;font-family:var(--font-mono)}
+.ov-bl.gone{opacity:0}
+.fallback{position:absolute;inset:0;display:none;place-items:center;padding:24px;text-align:center;color:var(--muted)}
+.fallback.show{display:grid}
+
+.chip{appearance:none;border:1px solid var(--line);background:var(--chip);color:var(--fg);border-radius:999px;padding:6px 12px;font:500 13px/1.2 var(--font-body);cursor:pointer;display:inline-flex;align-items:center;gap:6px;user-select:none;-webkit-user-select:none}
+.chip:focus-visible,.copy:focus-visible,input[type=range]:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+.chip[aria-pressed="true"],.chip.on{background:var(--accent);color:var(--accent-ink);border-color:var(--accent)}
+.chip input{position:absolute;opacity:0;width:0;height:0}
+.chip .sw{width:9px;height:9px;border-radius:50%;background:currentColor;opacity:.45}
+.chip.on .sw{opacity:1}
+.chip.act{border-style:dashed}
+.sep{width:1px;height:22px;background:var(--line);margin:0 2px}
+
+.panel{background:var(--surface);border:1px solid var(--line);border-radius:8px;padding:14px 16px;display:flex;flex-direction:column;gap:14px}
+.row{display:flex;flex-wrap:wrap;gap:8px;align-items:center}
+.row .lbl{font-size:12px;letter-spacing:.08em;text-transform:uppercase;color:var(--muted);font-weight:500;min-width:76px}
+.slider{display:flex;align-items:center;gap:12px;flex:1;min-width:0}
+input[type=range]{flex:1;min-width:120px;accent-color:var(--accent)}
+.val{font-family:var(--font-mono);font-variant-numeric:tabular-nums;font-size:13px;min-width:5ch;text-align:right;color:var(--fg)}
+.stat{font-family:var(--font-mono);font-size:12px;color:var(--muted);font-variant-numeric:tabular-nums}
+
+h2{font-family:var(--font-display);font-weight:700;font-size:20px;margin:0 0 2px;letter-spacing:-.005em}
+.dims{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:0;font-size:14px}
+.dims .g{grid-column:1/-1;font-size:11.5px;letter-spacing:.1em;text-transform:uppercase;color:var(--muted);padding:14px 0 4px;border-bottom:1px solid var(--line);font-weight:500}
+.dims .g:first-child{padding-top:0}
+.dims .k{padding:8px 0 0;color:var(--fg);min-width:0;font-weight:500}
+.dims .v{padding:8px 0 0 16px;font-family:var(--font-mono);font-variant-numeric:tabular-nums;font-size:13.5px;white-space:nowrap;text-align:right;align-self:start}
+.dims .n{grid-column:1/-1;color:var(--muted);font-size:12.5px;padding:1px 0 8px;border-bottom:1px solid var(--line);min-width:0}
+.dims .n:empty{padding-top:8px}
+.note{font-size:14px;color:var(--fg);display:flex;flex-direction:column;gap:8px}
+.note p{margin:0}
+.note ul{margin:0;padding-left:18px;display:flex;flex-direction:column;gap:4px}
+.note code,.inl{font-family:var(--font-mono);font-size:.92em;background:var(--code-bg);padding:1px 5px;border-radius:4px;border:1px solid var(--line)}
+.legend{display:inline-block;width:12px;height:3px;vertical-align:middle;border-radius:2px;margin-right:6px}
+
+details{border:1px solid var(--line);border-radius:8px;background:var(--surface);overflow:hidden}
+summary{cursor:pointer;padding:14px 16px;font-weight:500;list-style:none;display:flex;justify-content:space-between;align-items:center;gap:10px}
+summary::-webkit-details-marker{display:none}
+summary .arrow{color:var(--muted);transition:transform .2s}
+details[open] summary .arrow{transform:rotate(90deg)}
+.srcbar{display:flex;justify-content:space-between;align-items:center;gap:10px;padding:0 16px 10px;flex-wrap:wrap}
+.srcbar .name{font-family:var(--font-mono);font-size:12.5px;color:var(--muted);min-width:0;overflow-wrap:anywhere}
+.copy{appearance:none;border:1px solid var(--accent);background:var(--accent);color:var(--accent-ink);border-radius:8px;padding:7px 14px;font:500 13px var(--font-body);cursor:pointer}
+.copy.done{background:var(--ok);border-color:var(--ok);color:#fff}
+pre{margin:0;padding:14px 16px;background:var(--code-bg);border-top:1px solid var(--line);font-family:var(--font-mono);font-size:12px;line-height:1.5;overflow-x:auto;max-height:60vh;overflow-y:auto;tab-size:4;color:var(--fg)}
+footer{font-size:12.5px;color:var(--muted)}
+/* PerchWerks brand bar + sign-off */
+.brandbar{display:flex;align-items:center;justify-content:space-between;gap:12px;padding:6px 0 18px;margin-bottom:4px;border-bottom:1px solid var(--line)}
+.brandbar .pw-home{display:inline-flex;min-width:0}
+@media (max-width:360px){ .brandbar .tag{display:none} }
+.pw-lockup{height:15px;width:auto;max-width:100%;display:block}
+.pw-lockup .mark{fill:var(--logo-mark)} .pw-lockup .type{fill:var(--logo-type)}
+.brandbar .tag{font-size:11.5px;letter-spacing:.12em;color:var(--muted);font-weight:500;white-space:nowrap}
+h1{border-left:4px solid var(--accent);padding-left:12px}
+.signoff{display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:10px 16px;background:var(--brand-plate);color:var(--brand-plate-ink);border-radius:8px;padding:16px}
+.signoff .pw-lockup{height:16px}
+.signoff .pw-lockup .mark,.signoff .pw-lockup .type{fill:var(--brand-plate-ink)}
+.signoff span{font-size:12.5px;opacity:.85}
+@media (prefers-reduced-motion: reduce){ .ov-bl{transition:none} }
+</style>
+</head>
+<body>
+
+<div class="wrap">
+  <div class="brandbar">
+    <span class="pw-home"><svg class="pw-lockup" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 3607.66 278.4" role="img" aria-label="PerchWerks">
+  <g transform="translate(-195.005 -988.095)">
+    <path class="mark" transform="matrix(10,0,0,-10,801.015,1127.254)" d="M0 0-9.343-9.342C-12.788-12.787-17.917-13.924-22.495-12.257L-59.976 1.384C-60.601 1.612-60.438 2.538-59.773 2.538H-29.863C-29.197 2.538-29.034 3.464-29.659 3.691L-53.324 12.302C-53.949 12.53-53.786 13.456-53.121 13.456H-9.064C-7.739 13.456-7.076 11.854-8.013 10.918L-15.377 3.553C-15.752 3.178-15.487 2.538-14.957 2.538H-1.051C.273 2.538 .937 .937 0 0"/>
+    <path class="type" transform="matrix(10,0,0,-10,982.537,1117.044)" d="M0 0C-.032-.173 .101-.333 .277-.333H7.632C8.738-.333 9.717-.14 10.567 .246 11.418 .631 12.092 1.19 12.592 1.923 13.091 2.656 13.341 3.562 13.341 4.642 13.341 5.773 13.003 6.641 12.329 7.245 11.654 7.849 10.601 8.151 9.171 8.151H1.751C1.616 8.151 1.499 8.055 1.474 7.921ZM-7.766-13.423-3.054 12.017C-3.01 12.257-2.8 12.432-2.555 12.432H9.171C11.438 12.432 13.274 12.136 14.678 11.545 16.081 10.953 17.107 10.118 17.755 9.038 18.403 7.959 18.727 6.673 18.727 5.182 18.727 3.639 18.47 2.264 17.958 1.055 17.444-.153 16.702-1.181 15.73-2.03 14.758-2.878 13.591-3.521 12.228-3.958 10.864-4.396 9.346-4.613 7.672-4.613H-.598C-.733-4.613-.85-4.71-.875-4.842L-2.535-13.61C-2.58-13.85-2.79-14.023-3.034-14.023H-7.266C-7.584-14.023-7.824-13.735-7.766-13.423"/>
+    <path class="type" transform="matrix(10,0,0,-10,1176.182,1251.271)" d="M0 0 4.711 25.439C4.756 25.68 4.966 25.855 5.211 25.855H25.88C26.198 25.855 26.438 25.565 26.379 25.252L25.761 21.988C25.716 21.748 25.506 21.574 25.262 21.574H9.517C9.382 21.574 9.265 21.478 9.24 21.344L8.13 15.39C8.098 15.217 8.231 15.057 8.407 15.057H22.119C22.436 15.057 22.675 14.77 22.619 14.459L22.033 11.194C21.989 10.952 21.779 10.776 21.533 10.776H7.493C7.357 10.776 7.241 10.679 7.216 10.545L6.023 4.012C5.992 3.839 6.125 3.68 6.3 3.68H22.033C22.351 3.68 22.591 3.39 22.532 3.077L21.914-.187C21.869-.427 21.659-.601 21.415-.601H.5C.182-.601-.058-.312 0 0"/>
+    <path class="type" transform="matrix(10,0,0,-10,1526.7571,1113.5759)" d="M0 0C-.032-.173 .101-.332 .277-.332H8.766C9.765-.332 10.656-.12 11.439 .304 12.222 .728 12.842 1.326 13.301 2.097 13.76 2.868 13.99 3.781 13.99 4.835 13.99 5.786 13.686 6.519 13.079 7.033 12.471 7.547 11.574 7.805 10.386 7.805H1.671C1.536 7.805 1.419 7.708 1.395 7.574ZM-7.846-13.769-3.135 11.67C-3.09 11.911-2.88 12.085-2.635 12.085H10.791C12.735 12.085 14.34 11.815 15.61 11.275 16.878 10.736 17.83 9.977 18.465 9 19.098 8.023 19.416 6.853 19.416 5.491 19.416 3.973 19.173 2.611 18.687 1.403 18.201 .194 17.493-.84 16.561-1.702 15.689-2.509 14.608-3.152 13.321-3.632 13.177-3.686 13.1-3.843 13.151-3.988L16.585-13.693C16.702-14.023 16.456-14.37 16.106-14.37H11.602C11.384-14.37 11.19-14.231 11.12-14.023L8.021-4.767C7.982-4.652 7.875-4.575 7.754-4.575H-.637C-.773-4.575-.889-4.671-.914-4.805L-2.616-13.955C-2.661-14.196-2.871-14.37-3.116-14.37H-7.346C-7.664-14.37-7.904-14.082-7.846-13.769"/>
+    <path class="type" transform="matrix(10,0,0,-10,1861.432,1261.905)" d="M0 0C-3.753 0-6.648 .816-8.686 2.449-10.725 4.081-11.743 6.684-11.743 10.258-11.743 10.978-11.71 11.685-11.642 12.379-11.575 13.073-11.487 13.754-11.379 14.423-10.866 17.097-9.935 19.404-8.585 21.345-7.235 23.286-5.487 24.778-3.341 25.819-1.195 26.86 1.296 27.381 4.13 27.381 6.29 27.381 8.206 27.085 9.88 26.494 11.554 25.902 12.87 25.009 13.828 23.814 14.786 22.618 15.266 21.108 15.266 19.282 15.266 18.948 15.246 18.601 15.205 18.241 15.181 18.027 15.155 17.813 15.126 17.599 15.092 17.348 14.875 17.161 14.622 17.161H10.233C9.934 17.161 9.701 17.419 9.729 17.717 9.733 17.757 9.736 17.797 9.739 17.836 9.752 18.054 9.759 18.254 9.759 18.434 9.759 19.488 9.522 20.362 9.05 21.056 8.578 21.751 7.916 22.265 7.066 22.599 6.216 22.933 5.21 23.1 4.049 23.1 2.673 23.1 1.437 22.901 .344 22.502-.749 22.104-1.708 21.532-2.531 20.786-3.355 20.04-4.036 19.141-4.576 18.087-5.116 17.032-5.521 15.85-5.791 14.539-5.899 14.05-5.987 13.613-6.054 13.227-6.122 12.842-6.175 12.488-6.216 12.167-6.256 11.845-6.284 11.55-6.297 11.28-6.311 11.01-6.317 10.734-6.317 10.451-6.317 9.063-6.088 7.912-5.629 6.999-5.17 6.086-4.461 5.405-3.503 4.955-2.545 4.505-1.35 4.28 .081 4.28 1.565 4.28 2.895 4.505 4.07 4.955 5.244 5.405 6.222 6.067 7.005 6.942 7.71 7.728 8.196 8.681 8.463 9.801 8.517 10.026 8.725 10.181 8.956 10.181H13.149C13.475 10.181 13.715 9.878 13.646 9.559 13.202 7.523 12.378 5.821 11.176 4.454 9.853 2.95 8.226 1.832 6.297 1.099 4.366 .366 2.268 0 0 0"/>
+    <path class="type" transform="matrix(10,0,0,-10,2028.564,1251.271)" d="M0 0 4.711 25.439C4.756 25.68 4.966 25.855 5.211 25.855H9.442C9.76 25.855 9.999 25.567 9.942 25.255L8.13 15.428C8.098 15.255 8.231 15.095 8.406 15.095H20.832C20.968 15.095 21.085 15.192 21.109 15.326L22.974 25.439C23.019 25.68 23.229 25.855 23.474 25.855H27.704C28.022 25.855 28.262 25.567 28.204 25.254L23.492-.185C23.448-.426 23.238-.601 22.993-.601H18.762C18.444-.601 18.204-.312 18.262 0L20.195 10.443C20.227 10.616 20.095 10.776 19.919 10.776H7.493C7.357 10.776 7.241 10.679 7.216 10.546L5.23-.185C5.185-.426 4.975-.601 4.73-.601H.5C.182-.601-.058-.312 0 0"/>
+    <path class="type" transform="matrix(10,0,0,-10,2370.408,1252.661)" d="M0 0-2.336 25.439C-2.364 25.737-2.129 25.994-1.83 25.994H2.167C2.431 25.994 2.651 25.792 2.674 25.529L4.092 8.987C4.118 8.729 4.139 8.376 4.153 7.926 4.166 7.476 4.186 7.007 4.213 6.518 4.24 6.03 4.254 5.58 4.254 5.169H4.456C4.591 5.58 4.746 6.036 4.922 6.538 5.097 7.039 5.266 7.515 5.428 7.965 5.587 8.405 5.706 8.741 5.787 8.972 5.791 8.983 5.795 8.992 5.799 9.002L12.909 25.685C12.989 25.872 13.173 25.994 13.377 25.994H19.325C19.594 25.994 19.816 25.785 19.833 25.517L20.856 8.987C20.882 8.729 20.896 8.376 20.896 7.926 20.896 7.476 20.903 7.007 20.917 6.518 20.93 6.03 20.937 5.58 20.937 5.169H21.139C21.274 5.554 21.429 5.985 21.605 6.461 21.78 6.936 21.956 7.406 22.131 7.868 22.307 8.331 22.462 8.704 22.597 8.987L30.115 25.694C30.198 25.877 30.379 25.994 30.579 25.994H34.593C34.965 25.994 35.211 25.607 35.053 25.27L23.099-.17C23.015-.348 22.836-.462 22.639-.462H17.203C16.935-.462 16.712-.253 16.696 .015L15.632 16.893C15.605 17.252 15.585 17.67 15.571 18.146 15.558 18.621 15.544 19.097 15.531 19.573 15.517 20.048 15.511 20.453 15.511 20.788H15.308C15.2 20.402 15.065 19.964 14.903 19.476 14.741 18.988 14.579 18.512 14.417 18.049 14.255 17.587 14.107 17.201 13.972 16.893L6.412-.159C6.331-.343 6.149-.462 5.948-.462H.506C.243-.462 .024-.262 0 0"/>
+    <path class="type" transform="matrix(10,0,0,-10,2711.275,1251.271)" d="M0 0 4.711 25.439C4.756 25.68 4.966 25.855 5.211 25.855H25.879C26.198 25.855 26.438 25.565 26.379 25.252L25.761 21.988C25.716 21.748 25.506 21.574 25.262 21.574H9.517C9.381 21.574 9.265 21.478 9.24 21.344L8.13 15.39C8.098 15.217 8.231 15.057 8.407 15.057H22.119C22.436 15.057 22.676 14.77 22.62 14.459L22.033 11.194C21.989 10.952 21.779 10.776 21.533 10.776H7.493C7.357 10.776 7.241 10.679 7.216 10.545L6.023 4.012C5.992 3.839 6.125 3.68 6.3 3.68H22.033C22.351 3.68 22.591 3.39 22.532 3.077L21.914-.187C21.869-.427 21.659-.601 21.415-.601H.5C.182-.601-.058-.312 0 0"/>
+    <path class="type" transform="matrix(10,0,0,-10,3061.8509,1113.5759)" d="M0 0C-.032-.173 .101-.332 .277-.332H8.766C9.765-.332 10.656-.12 11.439 .304 12.221 .728 12.842 1.326 13.302 2.097 13.76 2.868 13.99 3.781 13.99 4.835 13.99 5.786 13.686 6.519 13.079 7.033 12.471 7.547 11.574 7.805 10.386 7.805H1.671C1.536 7.805 1.419 7.708 1.395 7.574ZM-7.846-13.769-3.135 11.67C-3.09 11.911-2.88 12.085-2.635 12.085H10.791C12.735 12.085 14.34 11.815 15.61 11.275 16.878 10.736 17.83 9.977 18.464 9 19.098 8.023 19.416 6.853 19.416 5.491 19.416 3.973 19.173 2.611 18.687 1.403 18.201 .194 17.493-.84 16.561-1.702 15.689-2.509 14.608-3.152 13.321-3.632 13.177-3.686 13.1-3.843 13.151-3.988L16.585-13.693C16.702-14.023 16.456-14.37 16.106-14.37H11.602C11.384-14.37 11.19-14.231 11.12-14.023L8.021-4.767C7.982-4.652 7.875-4.575 7.754-4.575H-.637C-.773-4.575-.889-4.671-.914-4.805L-2.616-13.955C-2.661-14.196-2.871-14.37-3.116-14.37H-7.346C-7.664-14.37-7.904-14.082-7.846-13.769"/>
+    <path class="type" transform="matrix(10,0,0,-10,3273.7232,1251.271)" d="M0 0 4.711 25.439C4.756 25.68 4.966 25.855 5.211 25.855H9.441C9.759 25.855 9.999 25.566 9.941 25.254L7.971 14.682C7.922 14.421 8.229 14.244 8.43 14.416L21.694 25.733C21.786 25.812 21.902 25.855 22.023 25.855H27.373C27.847 25.855 28.063 25.265 27.702 24.959L16.216 15.24C16.116 15.155 16.088 15.013 16.148 14.896L23.724 .14C23.897-.199 23.652-.601 23.272-.601H18.466C18.273-.601 18.097-.492 18.011-.319L12.188 11.361C12.109 11.518 11.907 11.566 11.766 11.46L6.81 7.733C6.708 7.656 6.638 7.544 6.616 7.418L5.229-.184C5.185-.425 4.974-.601 4.729-.601H.5C.182-.601-.058-.312 0 0"/>
+    <path class="type" transform="matrix(10,0,0,-10,3668.226,1261.905)" d="M0 0C-1.62 0-3.132 .135-4.535 .405-5.939 .675-7.167 1.086-8.22 1.639-9.273 2.191-10.097 2.892-10.69 3.741-11.284 4.589-11.581 5.592-11.581 6.749-11.581 7.109-11.548 7.494-11.48 7.906-11.442 8.14-11.401 8.354-11.358 8.546-11.306 8.78-11.101 8.947-10.861 8.947H-6.586C-6.257 8.947-6.013 8.638-6.092 8.319-6.093 8.316-6.094 8.313-6.094 8.311-6.162 8.041-6.195 7.803-6.195 7.597-6.195 6.903-5.966 6.305-5.507 5.804-5.048 5.303-4.387 4.923-3.523 4.666-2.659 4.409-1.634 4.28-.445 4.28 .769 4.28 1.815 4.37 2.693 4.551 3.57 4.73 4.292 4.981 4.859 5.303 5.426 5.624 5.844 6.016 6.114 6.479 6.384 6.942 6.519 7.443 6.519 7.983 6.519 8.574 6.337 9.075 5.973 9.487 5.608 9.898 5.115 10.258 4.495 10.567 3.873 10.875 3.172 11.145 2.389 11.377 1.606 11.608 .783 11.839-.081 12.071-1.08 12.353-2.085 12.669-3.098 13.016-4.11 13.363-5.041 13.806-5.892 14.346-6.742 14.886-7.417 15.548-7.916 16.332-8.416 17.116-8.666 18.073-8.666 19.205-8.666 20.594-8.362 21.795-7.754 22.811-7.147 23.826-6.311 24.675-5.244 25.356-4.178 26.037-2.95 26.545-1.559 26.88-.169 27.213 1.296 27.381 2.835 27.381 4.346 27.381 5.743 27.259 7.026 27.015 8.307 26.77 9.428 26.397 10.387 25.896 11.344 25.395 12.094 24.745 12.634 23.949 13.174 23.151 13.444 22.213 13.444 21.134 13.444 20.902 13.43 20.638 13.403 20.343 13.385 20.145 13.355 19.91 13.313 19.637 13.274 19.389 13.06 19.205 12.81 19.205H8.655C8.348 19.205 8.109 19.478 8.152 19.782 8.155 19.803 8.158 19.823 8.159 19.842 8.173 19.983 8.18 20.092 8.18 20.169 8.18 21.095 7.727 21.821 6.823 22.348 5.918 22.875 4.683 23.139 3.118 23.139 1.849 23.139 .735 23.01-.223 22.753-1.181 22.496-1.923 22.13-2.45 21.654-2.976 21.178-3.24 20.594-3.24 19.899-3.24 19.437-3.091 19.032-2.794 18.685-2.497 18.338-2.085 18.042-1.559 17.797-1.033 17.553-.425 17.322 .263 17.103 .952 16.885 1.673 16.673 2.43 16.467 3.509 16.158 4.609 15.824 5.73 15.464 6.85 15.104 7.889 14.648 8.848 14.095 9.806 13.542 10.575 12.848 11.156 12.013 11.736 11.177 12.027 10.155 12.027 8.947 12.027 7.301 11.682 5.913 10.994 4.782 10.306 3.65 9.387 2.731 8.24 2.024 7.093 1.317 5.804 .803 4.373 .482 2.942 .161 1.484 0 0 0"/>
+  </g>
+</svg></span>
+    <span class="tag">HARDWARE NOTES</span>
+  </div>
+  <header>
+    <div class="eyebrow">Winstar · COG graphic LCD · UC1608</div>
+    <h1>WO240128A<small>240 × 128 dots</small></h1>
+    <div class="keys">
+      <span><b>98.7 × 67.7</b> outline</span>
+      <span><b>9.5</b> thick</span>
+      <span>VA <b>92.0 × 53.0</b></span>
+      <span>AA <b>83.975 × 44.775</b></span>
+      <span><b>23</b> pins @ 1.27</span>
+      <span>all mm</span>
+    </div>
+  </header>
+
+  <div class="viewer" id="viewer">
+    <canvas id="c" aria-label="Interactive 3D model of the WO240128A LCD module"></canvas>
+    <div class="flatwrap" id="flatwrap" hidden><canvas id="flat" width="240" height="128" aria-label="Flat 1:1 view of the 240 by 128 framebuffer"></canvas></div>
+    <div class="overlay ov-tl" id="views">
+      <button class="chip" data-view="iso" aria-pressed="true">Iso</button>
+      <button class="chip" data-view="front" aria-pressed="false">Front</button>
+      <button class="chip" data-view="back" aria-pressed="false">Back</button>
+      <button class="chip" data-view="pins" aria-pressed="false">Pins</button>
+      <button class="chip" data-view="flat" aria-pressed="false">Flat</button>
+    </div>
+    <div class="overlay ov-br" id="cam">
+      <button class="chip" data-cam="sway" aria-pressed="true">Sway</button>
+      <button class="chip" data-cam="spin" aria-pressed="false">Spin</button>
+      <button class="chip" data-cam="still" aria-pressed="false">Still</button>
+    </div>
+    <div class="overlay ov-bl" id="hint">drag · pinch to zoom</div>
+    <div class="fallback" id="fallback">The 3D library did not load. Check the connection and reload the page.</div>
+  </div>
+
+  <div class="panel">
+    <div class="row" id="demo">
+      <span class="lbl">Demo</span>
+      <button class="chip act" data-act="reboot">Reboot</button>
+      <button class="chip act" data-act="lap">Lap</button>
+      <button class="chip act" data-act="purple">Purple sector</button>
+      <label class="chip on"><input type="checkbox" id="autoRun" checked><span class="sw"></span>Session ×4</label>
+    </div>
+    <div class="row" id="rate">
+      <span class="lbl">UI tick</span>
+      <button class="chip" data-fps="15" aria-pressed="false">15</button>
+      <button class="chip" data-fps="20" aria-pressed="false">20</button>
+      <button class="chip" data-fps="30" aria-pressed="true">30</button>
+      <button class="chip" data-fps="60" aria-pressed="false">60 fps</button>
+      <span class="sep"></span>
+      <label class="chip on"><input type="checkbox" id="fstn" checked><span class="sw"></span>FSTN response</label>
+      <span class="stat" id="stat"></span>
+    </div>
+    <div class="row" id="screens">
+      <span class="lbl">Screen</span>
+      <button class="chip" data-screen="live" aria-pressed="true">Live UI</button>
+      <button class="chip" data-screen="test" aria-pressed="false">Test pattern</button>
+      <button class="chip" data-screen="blank" aria-pressed="false">Blank</button>
+    </div>
+  </div>
+
+  <div class="panel">
+    <div class="row">
+      <span class="lbl">Explode</span>
+      <div class="slider">
+        <input type="range" id="explode" min="0" max="25" step="0.5" value="0" aria-label="Exploded view distance in millimetres">
+        <span class="val" id="explodeVal">0 mm</span>
+      </div>
+    </div>
+    <div class="row" id="parts">
+      <span class="lbl">Parts</span>
+      <label class="chip on"><input type="checkbox" data-part="frame" checked><span class="sw"></span>Frame</label>
+      <label class="chip on"><input type="checkbox" data-part="glass" checked><span class="sw"></span>Glass</label>
+      <label class="chip on"><input type="checkbox" data-part="pins" checked><span class="sw"></span>Pins</label>
+      <label class="chip on"><input type="checkbox" data-part="led" checked><span class="sw"></span>LED pins</label>
+      <label class="chip on"><input type="checkbox" data-part="pegs" checked><span class="sw"></span>Pegs</label>
+      <label class="chip on"><input type="checkbox" data-part="chip" checked><span class="sw"></span>UC1608</label>
+      <label class="chip on"><input type="checkbox" data-part="tape" checked><span class="sw"></span>Pull tape</label>
+    </div>
+    <div class="row" id="opts">
+      <span class="lbl">Show</span>
+      <label class="chip"><input type="checkbox" data-opt="outlines"><span class="sw"></span>VA / AA outlines</label>
+      <label class="chip on"><input type="checkbox" data-opt="edges" checked><span class="sw"></span>Edges</label>
+      <label class="chip on"><input type="checkbox" data-opt="backlight" checked><span class="sw"></span>Backlight</label>
+      <label class="chip on"><input type="checkbox" data-opt="grid" checked><span class="sw"></span>10 mm grid</label>
+    </div>
+  </div>
+
+  <section class="panel note">
+    <h2>What the demo is running</h2>
+    <p>The screen is a hand-rolled 1-bit renderer, no library: a 240 × 128 framebuffer with clip rectangle, fill / rect / invert / dither primitives, a 5 × 7 bitmap font, a parametric seven-segment font drawn from rectangles at any height, and a transform blit (scale + rotate by inverse mapping) used for the logo. Every animation is a tween in milliseconds, so the UI tick rate only changes smoothness, never timing. The loop is fixed-step: pick a rate above and the renderer runs exactly that many ticks per second. Written as the C it will become, with integer pixel math.</p>
+    <p><b>Why 30:</b> a full frame is 3840 bytes, about 8 ms on the UC1608's SPI at 4 MHz and under 1 ms of CPU to draw, so the bus and the M33 are not the limit. The FSTN panel is: it needs roughly 150 ms to switch, so anything faster than ~20 updates per second only smears. The "FSTN response" toggle models that lag so a motion that looks right here looks right on glass. 15 fps is visibly steppy on the RPM bar; 60 buys nothing the glass can show.</p>
+    <p>Events: the session runs a simulated direct-drive kart lap at 4× speed with three sectors. A sector faster than the session best goes purple: strobe, 1-px shake, badge, sparkles, then the badge flies into its sector box. A lap end freezes and flashes the time, rolls the digits over, and a best lap gets a banner. Reboot replays the start-up: logo spin-in, name, fly-to-header, gauge sweep, dissolve.</p>
+  </section>
+
+  <section class="panel">
+    <h2>Dimensions from the drawing</h2>
+    <div class="dims" id="dims"></div>
+  </section>
+
+  <section class="panel note">
+    <h2>How to read the model</h2>
+    <p>Axes follow the drawing's front view: <span class="inl">+X</span> right, <span class="inl">+Y</span> up, <span class="inl">+Z</span> toward you, with the glass front face at <span class="inl">Z = 0</span>. The 23 signal pins, the LED pins and the two pegs are bent 90° and point to −Z, so the module lies flat on the PCB with the frame's rear face on it. <span class="legend" style="background:var(--va)"></span>VA is the clear window, <span class="legend" style="background:var(--aa)"></span>AA is the live dot matrix.</p>
+    <p>Everything a PCB or bezel depends on comes straight off the drawing. These were scaled from it rather than dimensioned, so treat them as cosmetic:</p>
+    <ul>
+      <li>Pin tab height on the ledge (2.6), A/K pin thickness (0.5), UC1608 outline (10.9 × 1.7), pull-tape length, end-cap width (6.4).</li>
+      <li>Signal-pin length is the drawing's 8.0 ± 0.5 measured from the LCD rear face, so the tips reach 10.9 from the front face; the 9.5 overall thickness is to the A/K pin tips.</li>
+      <li>The side-wall notch (10.0 MAX, 23.5 MIN from the top) is modelled on both sides, open toward the front.</li>
+    </ul>
+    <p>In OpenSCAD, <span class="inl">mode = "footprint"</span> gives the hole pattern in the PCB plane and <span class="inl">mode = "bezel"</span> the window outlines; both export as DXF. <span class="inl">origin</span> can be the outline centre, the active-area centre, the corner, or pin 1.</p>
+  </section>
+
+  <details id="src">
+    <summary><span>OpenSCAD source</span><span class="arrow">▶</span></summary>
+    <div class="srcbar">
+      <span class="name">WO240128A_240x128_COG.scad · paste into a new OpenSCAD file</span>
+      <button class="copy" id="copyBtn">Copy script</button>
+    </div>
+    <pre id="scad">// =====================================================================
+//  Winstar WO240128A-class 240x128 COG graphic LCD (UC1608) -- OpenSCAD model
+//  Transcribed from the Winstar outline drawing (98.7 x 67.7 mm LB outline,
+//  96.0 x 65.0 mm glass, VA 92.0 x 53.0, AA 83.975 x 44.775, 23 pins @ 1.27,
+//  LED pins A/K, 2 x dia 1.5 locating pegs, 9.5 mm max overall thickness).
+//
+//  Units: mm.
+//  Coordinate frame (matches the drawing's FRONT view):
+//     +X = right, +Y = up, +Z = toward the viewer (out of the glass).
+//     Z = 0 is the glass FRONT face. Everything else lies at Z &lt; 0.
+//     The pins and pegs are bent 90 deg and point toward -Z (into the PCB),
+//     so the module lies flat on a PCB with the frame's rear face on it.
+//
+//  Origin choices (see `origin` below):
+//     lb_center  = centre of the 98.7 x 67.7 outline (default)
+//     aa_center  = centre of the 240x128 active area (handy for bezel cut-outs)
+//     lb_corner  = bottom-left corner of the outline
+//     pin1       = pin-1 leg centreline (handy for PCB alignment)
+//
+//  Modes:
+//     mode = "3d"        full model
+//     mode = "footprint" 2D outline + hole pattern in the PCB plane (export DXF)
+//     mode = "bezel"     2D cut-out helper (VA / AA / glass outlines)
+//
+//  Dimensions marked (est.) were scaled off the drawing, not dimensioned on it.
+//  Pin-tab height, A/K pin thickness, chip size and the pull-tape length are
+//  cosmetic; everything that affects a PCB or bezel is from the drawing.
+// =====================================================================
+
+/* [Output] */
+mode   = "3d";        // ["3d", "footprint", "bezel"]
+origin = "lb_center"; // ["lb_center", "aa_center", "lb_corner", "pin1"]
+
+/* [Show / hide] */
+show_frame     = true;
+show_glass     = true;
+show_pins      = true;
+show_led_pins  = true;
+show_pegs      = true;
+show_chip      = true;
+show_pull_tape = true;
+show_va_aa     = true;   // tint the viewing / active areas on the glass
+show_dots      = false;  // draw the 240x128 dot matrix (30,720 cubes: preview only, slow)
+dot_step       = 4;      // when show_dots: draw every Nth dot (1 = all)
+explode        = 0;      // pull the glass / frame / pins apart along Z (mm)
+
+/* [Resolution] */
+$fn = 32;
+
+/* [LB outline: backlight + frame] */
+lb_w       = 98.7;   // +/-0.5
+lb_h       = 67.7;   // +/-0.5
+lb_t       = 2.8;    // backlight thickness +/-0.3 (behind the glass)
+frame_wall = 1.35;   // side/top wall = (lb_w - lcd_w)/2 = (lb_h - lcd_h)/2
+foot_w     = 6.4;    // end caps at the two bottom corners (est.)
+foot_h     = 1.35;   // they reach 1.35 below the glass bottom edge
+
+/* [LCD glass] */
+lcd_w   = 96.0;      // +/-0.2
+lcd_h   = 65.0;      // +/-0.2
+lcd_t   = 2.9;       // 2.9 MAX (2 x 1.1 glass + polarizers)
+ledge_h = 8.0;       // COG ledge: the front plate stops 8.0 above the bottom edge
+
+/* [Viewing area / active area (drawing references them to the LB outline)] */
+va_w = 92.0;  va_h = 53.0;
+va_x0 = 3.35;         // LB left edge -&gt; VA left edge
+va_ytop = 3.35;       // LB top edge  -&gt; VA top edge
+aa_w = 83.975; aa_h = 44.775;
+aa_x0 = 7.3625;       // (lb_w - aa_w)/2  (drawing: 7.363)
+aa_ytop = 6.1125;     // LB top edge -&gt; AA top edge
+cols = 240; rows = 128;
+dot_pitch = 0.35; dot_size = 0.325;
+
+/* [Signal pins (23 x, bent 90 deg toward the rear)] */
+n_pins    = 23;
+pin_pitch = 1.27;     // P1.27 x 22 = 27.94
+pin1_x    = 35.38;    // LB left edge -&gt; pin 1 centre
+pin_w     = 0.40;
+pin_t     = 0.25;     // +/-0.05
+pin_tab_h = 2.6;      // vertical tab soldered on the ledge (est.)
+pin_len   = 8.0;      // +/-0.5, measured from the LCD rear face to the tip
+pin_y     = 1.225;    // leg centreline above LB bottom edge (drawing: 66.475 from top)
+
+/* [LED backlight pins A / K] */
+led_pin_w   = 1.8;
+led_pin_t   = 0.5;    // (est.)
+led_a_x     = 19.35;  // LB left edge -&gt; A centre
+led_k_x     = 79.35;  // = 19.35 + 60.0
+led_pin_len = 3.8;    // beyond the frame rear face  (5.7 + 3.8 = 9.5 overall)
+led_pin_y   = 2.25;   // centreline above LB bottom edge (drawing: 65.45 from top)
+
+/* [Locating pegs 2 x dia 1.5] */
+peg_d   = 1.5;
+peg_len = 2.0;        // beyond the frame rear face
+peg_x   = 1.83;       // LB left edge -&gt; peg centre  (95.0 between centres)
+peg_y   = 2.25;
+
+/* [Cosmetic details] */
+chip_w = 10.9; chip_h = 1.7; chip_t = 0.3; chip_y = 6.65;   // UC1608 on the ledge (est.)
+tape_len = 13.0; tape_h = 8.0; tape_t = 0.1; tape_overhang = 3.65; // pull tape, top-right
+notch_len = 10.0; notch_top = 23.5; notch_depth = 1.85;      // side-wall notch: 10.0 MAX, 23.5 MIN from top
+
+/* [PCB footprint holes (mode = "footprint")] */
+pin_hole_d  = 0.9;
+peg_hole_d  = 1.6;
+led_hole    = [2.3, 1.0];   // slot for the 1.8 x 0.5 LED pins
+keepout     = 0.5;          // courtyard margin around the LB outline
+
+// ---------------------------------------------------------------------
+//  Derived values
+// ---------------------------------------------------------------------
+total_t   = lcd_t + lb_t;                 // 5.7 : glass front -&gt; frame rear
+lcd_x0    = (lb_w - lcd_w) / 2;           // 1.35
+lcd_y0    = (lb_h - lcd_h) / 2;           // 1.35
+plate_t   = lcd_t / 2;                    // each glass plate incl. polarizer
+ledge_z   = -plate_t;                     // front face of the rear plate (pads + chip live here)
+va_y0     = lb_h - va_ytop - va_h;        // 11.35
+aa_y0     = lb_h - aa_ytop - aa_h;        // 16.8125
+aa_cx     = aa_x0 + aa_w / 2;             // 49.35
+aa_cy     = aa_y0 + aa_h / 2;             // 39.2
+pin_tip_z = -(lcd_t + pin_len);           // -10.9
+led_tip_z = -(total_t + led_pin_len);     // -9.5
+peg_tip_z = -(total_t + peg_len);         // -7.7
+eps = 0.01;
+
+function pin_x(n) = pin1_x + (n - 1) * pin_pitch;    // n = 1..23, LB-corner frame
+function pin_pos(n) = [pin_x(n), pin_y];              // PCB-plane position of pin n
+
+function origin_shift() =
+    origin == "aa_center" ? [-aa_cx, -aa_cy, 0] :
+    origin == "lb_corner" ? [0, 0, 0] :
+    origin == "pin1"      ? [-pin1_x, -pin_y, 0] :
+                            [-lb_w / 2, -lb_h / 2, 0];
+
+// ---------------------------------------------------------------------
+//  Colours
+// ---------------------------------------------------------------------
+c_frame = [0.93, 0.93, 0.90];
+c_glass = [0.62, 0.78, 0.70, 0.45];
+c_va    = [0.84, 0.88, 0.80];
+c_aa    = [0.77, 0.83, 0.74];
+c_dot   = [0.25, 0.30, 0.25];
+c_metal = [0.78, 0.78, 0.80];
+c_chip  = [0.12, 0.12, 0.12];
+c_tape  = [0.95, 0.55, 0.15, 0.85];
+
+// ---------------------------------------------------------------------
+//  Parts (all built in the LB-corner frame: X from the left edge, Y from the
+//  bottom edge, Z from the glass front face)
+// ---------------------------------------------------------------------
+
+module side_notch(x_wall) {
+    // rounded slot through the side wall, open toward the front face
+    yc = lb_h - notch_top - notch_len / 2;
+    r  = frame_wall / 2;
+    hull()
+        for (y = [yc - notch_len / 2 + r, yc + notch_len / 2 - r])
+            translate([x_wall + frame_wall / 2, y, -notch_depth])
+                cylinder(r = r, h = notch_depth + 1);
+}
+
+module frame() {
+    color(c_frame) {
+        difference() {
+            // cradle: full outline above the feet line, full thickness
+            translate([0, lcd_y0, -total_t]) cube([lb_w, lb_h - lcd_y0, total_t]);
+            // pocket the glass sits in (leaves the backlight behind it)
+            translate([lcd_x0, lcd_y0 - 1, -lcd_t]) cube([lcd_w, lcd_h + 1, lcd_t + 1]);
+            // glue/tape notches in both side walls
+            side_notch(0);
+            side_notch(lb_w - frame_wall);
+        }
+        // end caps / feet at the two bottom corners
+        for (x = [0, lb_w - foot_w])
+            translate([x, 0, -total_t]) cube([foot_w, foot_h + eps, total_t]);
+    }
+}
+
+module glass() {
+    // rear plate: full height, its bottom 8 mm is the COG ledge
+    color(c_glass) translate([lcd_x0, lcd_y0, -lcd_t]) cube([lcd_w, lcd_h, plate_t]);
+    // front plate: shorter by the ledge
+    color(c_glass) translate([lcd_x0, lcd_y0 + ledge_h, -plate_t]) cube([lcd_w, lcd_h - ledge_h, plate_t]);
+    if (show_va_aa) {
+        color(c_va) translate([va_x0, va_y0, 0])       cube([va_w, va_h, eps]);
+        color(c_aa) translate([aa_x0, aa_y0, eps])     cube([aa_w, aa_h, eps]);
+    }
+    if (show_dots) dots();
+}
+
+// One dot at column c (0..239, left-&gt;right) and row r (0..127, top-&gt;bottom)
+module pixel(c, r, h = 0.03) {
+    translate([aa_x0 + c * dot_pitch, lb_h - aa_ytop - r * dot_pitch - dot_size, 2 * eps])
+        cube([dot_size, dot_size, h]);
+}
+
+module dots() {
+    color(c_dot)
+        for (c = [0 : dot_step : cols - 1], r = [0 : dot_step : rows - 1])
+            pixel(c, r);
+}
+
+module signal_pin(n) {
+    x = pin_x(n);
+    color(c_metal) {
+        // vertical tab on the ledge (rear plate's front face)
+        translate([x - pin_w / 2, lcd_y0, ledge_z]) cube([pin_w, pin_tab_h, pin_t]);
+        // leg wrapped under the glass bottom edge, running to the rear
+        translate([x - pin_w / 2, pin_y - pin_t / 2, pin_tip_z])
+            cube([pin_w, pin_t, -pin_tip_z + ledge_z + pin_t]);
+    }
+}
+
+module led_pin(x) {
+    color(c_metal)
+        translate([x - led_pin_w / 2, led_pin_y - led_pin_t / 2, led_tip_z])
+            cube([led_pin_w, led_pin_t, led_pin_len + 1]);   // +1 buried in the frame
+}
+
+module peg(x) {
+    color(c_frame)
+        translate([x, peg_y, peg_tip_z])
+            cylinder(d1 = peg_d - 0.3, d2 = peg_d, h = 0.3);   // chamfered tip
+    color(c_frame)
+        translate([x, peg_y, peg_tip_z + 0.3])
+            cylinder(d = peg_d, h = peg_len - 0.3 + eps);
+}
+
+module chip() {
+    color(c_chip)
+        translate([lb_w / 2 - chip_w / 2, chip_y - chip_h / 2, ledge_z])
+            cube([chip_w, chip_h, chip_t]);
+}
+
+module pull_tape() {
+    color(c_tape)
+        translate([lb_w + tape_overhang - tape_len, lb_h - lcd_y0 - tape_h, 2 * eps])
+            cube([tape_len, tape_h, tape_t]);
+}
+
+// ---------------------------------------------------------------------
+//  Assembly
+// ---------------------------------------------------------------------
+module wo240128a() {
+    if (show_frame) translate([0, 0, -explode]) frame();
+    if (show_glass) glass();
+    if (show_chip)  chip();
+    if (show_pull_tape) pull_tape();
+    translate([0, 0, -2 * explode]) {
+        if (show_pins)     for (n = [1 : n_pins]) signal_pin(n);
+        if (show_led_pins) { led_pin(led_a_x); led_pin(led_k_x); }
+        if (show_pegs)     { peg(peg_x); peg(lb_w - peg_x); }
+    }
+}
+
+// 2D: what the PCB sees (module lying flat, glass up). Export with File &gt; Export &gt; DXF.
+module footprint_2d(stroke = 0.1) {
+    // courtyard + body outline
+    difference() { offset(delta = keepout) square([lb_w, lb_h]); offset(delta = keepout - stroke) square([lb_w, lb_h]); }
+    difference() { square([lb_w, lb_h]); offset(delta = -stroke) square([lb_w, lb_h]); }
+    // signal pins
+    for (n = [1 : n_pins]) translate(pin_pos(n)) circle(d = pin_hole_d);
+    // LED pins: rounded slots
+    for (x = [led_a_x, led_k_x])
+        translate([x, led_pin_y]) hull() for (s = [-1, 1])
+            translate([s * (led_hole[0] - led_hole[1]) / 2, 0]) circle(d = led_hole[1]);
+    // locating pegs
+    for (x = [peg_x, lb_w - peg_x]) translate([x, peg_y]) circle(d = peg_hole_d);
+}
+
+// 2D: bezel / window helper (front view). AA = live pixels, VA = clear window.
+module bezel_2d(stroke = 0.1) {
+    difference() { square([lb_w, lb_h]); offset(delta = -stroke) square([lb_w, lb_h]); }
+    translate([lcd_x0, lcd_y0]) difference() { square([lcd_w, lcd_h]); offset(delta = -stroke) square([lcd_w, lcd_h]); }
+    translate([va_x0, va_y0])   difference() { square([va_w, va_h]);   offset(delta = -stroke) square([va_w, va_h]); }
+    translate([aa_x0, aa_y0])   difference() { square([aa_w, aa_h]);   offset(delta = -stroke) square([aa_w, aa_h]); }
+}
+
+translate(origin_shift()) {
+    if (mode == "3d")             wo240128a();
+    else if (mode == "footprint") footprint_2d();
+    else if (mode == "bezel")     bezel_2d();
+}
+
+// Handy numbers (relative to the LB bottom-left corner; add origin_shift() for your origin)
+echo(str("Overall: ", lb_w, " x ", lb_h, " x ", -led_tip_z, " mm (frame rear face at Z=", -total_t, ")"));
+echo(str("AA centre: X=", aa_cx, " Y=", aa_cy, "   VA: ", va_w, "x", va_h, " at X=", va_x0, " Y=", va_y0));
+echo(str("Pin 1 leg: X=", pin1_x, " Y=", pin_y, "   pin 23: X=", pin_x(n_pins), "   pitch ", pin_pitch));
+echo(str("A: X=", led_a_x, "  K: X=", led_k_x, "  Y=", led_pin_y, "   pegs: X=", peg_x, " &amp; ", lb_w - peg_x, " Y=", peg_y));
+echo(str("Origin shift applied (", origin, "): ", origin_shift()));
+</pre>
+  </details>
+
+  <footer>Transcribed from the Winstar WO240128A outline drawing. Verify against the datasheet revision you order to, tolerances as marked.</footer>
+  <div class="signoff">
+    <svg class="pw-lockup" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 3607.66 278.4">
+  <g transform="translate(-195.005 -988.095)">
+    <path class="mark" transform="matrix(10,0,0,-10,801.015,1127.254)" d="M0 0-9.343-9.342C-12.788-12.787-17.917-13.924-22.495-12.257L-59.976 1.384C-60.601 1.612-60.438 2.538-59.773 2.538H-29.863C-29.197 2.538-29.034 3.464-29.659 3.691L-53.324 12.302C-53.949 12.53-53.786 13.456-53.121 13.456H-9.064C-7.739 13.456-7.076 11.854-8.013 10.918L-15.377 3.553C-15.752 3.178-15.487 2.538-14.957 2.538H-1.051C.273 2.538 .937 .937 0 0"/>
+    <path class="type" transform="matrix(10,0,0,-10,982.537,1117.044)" d="M0 0C-.032-.173 .101-.333 .277-.333H7.632C8.738-.333 9.717-.14 10.567 .246 11.418 .631 12.092 1.19 12.592 1.923 13.091 2.656 13.341 3.562 13.341 4.642 13.341 5.773 13.003 6.641 12.329 7.245 11.654 7.849 10.601 8.151 9.171 8.151H1.751C1.616 8.151 1.499 8.055 1.474 7.921ZM-7.766-13.423-3.054 12.017C-3.01 12.257-2.8 12.432-2.555 12.432H9.171C11.438 12.432 13.274 12.136 14.678 11.545 16.081 10.953 17.107 10.118 17.755 9.038 18.403 7.959 18.727 6.673 18.727 5.182 18.727 3.639 18.47 2.264 17.958 1.055 17.444-.153 16.702-1.181 15.73-2.03 14.758-2.878 13.591-3.521 12.228-3.958 10.864-4.396 9.346-4.613 7.672-4.613H-.598C-.733-4.613-.85-4.71-.875-4.842L-2.535-13.61C-2.58-13.85-2.79-14.023-3.034-14.023H-7.266C-7.584-14.023-7.824-13.735-7.766-13.423"/>
+    <path class="type" transform="matrix(10,0,0,-10,1176.182,1251.271)" d="M0 0 4.711 25.439C4.756 25.68 4.966 25.855 5.211 25.855H25.88C26.198 25.855 26.438 25.565 26.379 25.252L25.761 21.988C25.716 21.748 25.506 21.574 25.262 21.574H9.517C9.382 21.574 9.265 21.478 9.24 21.344L8.13 15.39C8.098 15.217 8.231 15.057 8.407 15.057H22.119C22.436 15.057 22.675 14.77 22.619 14.459L22.033 11.194C21.989 10.952 21.779 10.776 21.533 10.776H7.493C7.357 10.776 7.241 10.679 7.216 10.545L6.023 4.012C5.992 3.839 6.125 3.68 6.3 3.68H22.033C22.351 3.68 22.591 3.39 22.532 3.077L21.914-.187C21.869-.427 21.659-.601 21.415-.601H.5C.182-.601-.058-.312 0 0"/>
+    <path class="type" transform="matrix(10,0,0,-10,1526.7571,1113.5759)" d="M0 0C-.032-.173 .101-.332 .277-.332H8.766C9.765-.332 10.656-.12 11.439 .304 12.222 .728 12.842 1.326 13.301 2.097 13.76 2.868 13.99 3.781 13.99 4.835 13.99 5.786 13.686 6.519 13.079 7.033 12.471 7.547 11.574 7.805 10.386 7.805H1.671C1.536 7.805 1.419 7.708 1.395 7.574ZM-7.846-13.769-3.135 11.67C-3.09 11.911-2.88 12.085-2.635 12.085H10.791C12.735 12.085 14.34 11.815 15.61 11.275 16.878 10.736 17.83 9.977 18.465 9 19.098 8.023 19.416 6.853 19.416 5.491 19.416 3.973 19.173 2.611 18.687 1.403 18.201 .194 17.493-.84 16.561-1.702 15.689-2.509 14.608-3.152 13.321-3.632 13.177-3.686 13.1-3.843 13.151-3.988L16.585-13.693C16.702-14.023 16.456-14.37 16.106-14.37H11.602C11.384-14.37 11.19-14.231 11.12-14.023L8.021-4.767C7.982-4.652 7.875-4.575 7.754-4.575H-.637C-.773-4.575-.889-4.671-.914-4.805L-2.616-13.955C-2.661-14.196-2.871-14.37-3.116-14.37H-7.346C-7.664-14.37-7.904-14.082-7.846-13.769"/>
+    <path class="type" transform="matrix(10,0,0,-10,1861.432,1261.905)" d="M0 0C-3.753 0-6.648 .816-8.686 2.449-10.725 4.081-11.743 6.684-11.743 10.258-11.743 10.978-11.71 11.685-11.642 12.379-11.575 13.073-11.487 13.754-11.379 14.423-10.866 17.097-9.935 19.404-8.585 21.345-7.235 23.286-5.487 24.778-3.341 25.819-1.195 26.86 1.296 27.381 4.13 27.381 6.29 27.381 8.206 27.085 9.88 26.494 11.554 25.902 12.87 25.009 13.828 23.814 14.786 22.618 15.266 21.108 15.266 19.282 15.266 18.948 15.246 18.601 15.205 18.241 15.181 18.027 15.155 17.813 15.126 17.599 15.092 17.348 14.875 17.161 14.622 17.161H10.233C9.934 17.161 9.701 17.419 9.729 17.717 9.733 17.757 9.736 17.797 9.739 17.836 9.752 18.054 9.759 18.254 9.759 18.434 9.759 19.488 9.522 20.362 9.05 21.056 8.578 21.751 7.916 22.265 7.066 22.599 6.216 22.933 5.21 23.1 4.049 23.1 2.673 23.1 1.437 22.901 .344 22.502-.749 22.104-1.708 21.532-2.531 20.786-3.355 20.04-4.036 19.141-4.576 18.087-5.116 17.032-5.521 15.85-5.791 14.539-5.899 14.05-5.987 13.613-6.054 13.227-6.122 12.842-6.175 12.488-6.216 12.167-6.256 11.845-6.284 11.55-6.297 11.28-6.311 11.01-6.317 10.734-6.317 10.451-6.317 9.063-6.088 7.912-5.629 6.999-5.17 6.086-4.461 5.405-3.503 4.955-2.545 4.505-1.35 4.28 .081 4.28 1.565 4.28 2.895 4.505 4.07 4.955 5.244 5.405 6.222 6.067 7.005 6.942 7.71 7.728 8.196 8.681 8.463 9.801 8.517 10.026 8.725 10.181 8.956 10.181H13.149C13.475 10.181 13.715 9.878 13.646 9.559 13.202 7.523 12.378 5.821 11.176 4.454 9.853 2.95 8.226 1.832 6.297 1.099 4.366 .366 2.268 0 0 0"/>
+    <path class="type" transform="matrix(10,0,0,-10,2028.564,1251.271)" d="M0 0 4.711 25.439C4.756 25.68 4.966 25.855 5.211 25.855H9.442C9.76 25.855 9.999 25.567 9.942 25.255L8.13 15.428C8.098 15.255 8.231 15.095 8.406 15.095H20.832C20.968 15.095 21.085 15.192 21.109 15.326L22.974 25.439C23.019 25.68 23.229 25.855 23.474 25.855H27.704C28.022 25.855 28.262 25.567 28.204 25.254L23.492-.185C23.448-.426 23.238-.601 22.993-.601H18.762C18.444-.601 18.204-.312 18.262 0L20.195 10.443C20.227 10.616 20.095 10.776 19.919 10.776H7.493C7.357 10.776 7.241 10.679 7.216 10.546L5.23-.185C5.185-.426 4.975-.601 4.73-.601H.5C.182-.601-.058-.312 0 0"/>
+    <path class="type" transform="matrix(10,0,0,-10,2370.408,1252.661)" d="M0 0-2.336 25.439C-2.364 25.737-2.129 25.994-1.83 25.994H2.167C2.431 25.994 2.651 25.792 2.674 25.529L4.092 8.987C4.118 8.729 4.139 8.376 4.153 7.926 4.166 7.476 4.186 7.007 4.213 6.518 4.24 6.03 4.254 5.58 4.254 5.169H4.456C4.591 5.58 4.746 6.036 4.922 6.538 5.097 7.039 5.266 7.515 5.428 7.965 5.587 8.405 5.706 8.741 5.787 8.972 5.791 8.983 5.795 8.992 5.799 9.002L12.909 25.685C12.989 25.872 13.173 25.994 13.377 25.994H19.325C19.594 25.994 19.816 25.785 19.833 25.517L20.856 8.987C20.882 8.729 20.896 8.376 20.896 7.926 20.896 7.476 20.903 7.007 20.917 6.518 20.93 6.03 20.937 5.58 20.937 5.169H21.139C21.274 5.554 21.429 5.985 21.605 6.461 21.78 6.936 21.956 7.406 22.131 7.868 22.307 8.331 22.462 8.704 22.597 8.987L30.115 25.694C30.198 25.877 30.379 25.994 30.579 25.994H34.593C34.965 25.994 35.211 25.607 35.053 25.27L23.099-.17C23.015-.348 22.836-.462 22.639-.462H17.203C16.935-.462 16.712-.253 16.696 .015L15.632 16.893C15.605 17.252 15.585 17.67 15.571 18.146 15.558 18.621 15.544 19.097 15.531 19.573 15.517 20.048 15.511 20.453 15.511 20.788H15.308C15.2 20.402 15.065 19.964 14.903 19.476 14.741 18.988 14.579 18.512 14.417 18.049 14.255 17.587 14.107 17.201 13.972 16.893L6.412-.159C6.331-.343 6.149-.462 5.948-.462H.506C.243-.462 .024-.262 0 0"/>
+    <path class="type" transform="matrix(10,0,0,-10,2711.275,1251.271)" d="M0 0 4.711 25.439C4.756 25.68 4.966 25.855 5.211 25.855H25.879C26.198 25.855 26.438 25.565 26.379 25.252L25.761 21.988C25.716 21.748 25.506 21.574 25.262 21.574H9.517C9.381 21.574 9.265 21.478 9.24 21.344L8.13 15.39C8.098 15.217 8.231 15.057 8.407 15.057H22.119C22.436 15.057 22.676 14.77 22.62 14.459L22.033 11.194C21.989 10.952 21.779 10.776 21.533 10.776H7.493C7.357 10.776 7.241 10.679 7.216 10.545L6.023 4.012C5.992 3.839 6.125 3.68 6.3 3.68H22.033C22.351 3.68 22.591 3.39 22.532 3.077L21.914-.187C21.869-.427 21.659-.601 21.415-.601H.5C.182-.601-.058-.312 0 0"/>
+    <path class="type" transform="matrix(10,0,0,-10,3061.8509,1113.5759)" d="M0 0C-.032-.173 .101-.332 .277-.332H8.766C9.765-.332 10.656-.12 11.439 .304 12.221 .728 12.842 1.326 13.302 2.097 13.76 2.868 13.99 3.781 13.99 4.835 13.99 5.786 13.686 6.519 13.079 7.033 12.471 7.547 11.574 7.805 10.386 7.805H1.671C1.536 7.805 1.419 7.708 1.395 7.574ZM-7.846-13.769-3.135 11.67C-3.09 11.911-2.88 12.085-2.635 12.085H10.791C12.735 12.085 14.34 11.815 15.61 11.275 16.878 10.736 17.83 9.977 18.464 9 19.098 8.023 19.416 6.853 19.416 5.491 19.416 3.973 19.173 2.611 18.687 1.403 18.201 .194 17.493-.84 16.561-1.702 15.689-2.509 14.608-3.152 13.321-3.632 13.177-3.686 13.1-3.843 13.151-3.988L16.585-13.693C16.702-14.023 16.456-14.37 16.106-14.37H11.602C11.384-14.37 11.19-14.231 11.12-14.023L8.021-4.767C7.982-4.652 7.875-4.575 7.754-4.575H-.637C-.773-4.575-.889-4.671-.914-4.805L-2.616-13.955C-2.661-14.196-2.871-14.37-3.116-14.37H-7.346C-7.664-14.37-7.904-14.082-7.846-13.769"/>
+    <path class="type" transform="matrix(10,0,0,-10,3273.7232,1251.271)" d="M0 0 4.711 25.439C4.756 25.68 4.966 25.855 5.211 25.855H9.441C9.759 25.855 9.999 25.566 9.941 25.254L7.971 14.682C7.922 14.421 8.229 14.244 8.43 14.416L21.694 25.733C21.786 25.812 21.902 25.855 22.023 25.855H27.373C27.847 25.855 28.063 25.265 27.702 24.959L16.216 15.24C16.116 15.155 16.088 15.013 16.148 14.896L23.724 .14C23.897-.199 23.652-.601 23.272-.601H18.466C18.273-.601 18.097-.492 18.011-.319L12.188 11.361C12.109 11.518 11.907 11.566 11.766 11.46L6.81 7.733C6.708 7.656 6.638 7.544 6.616 7.418L5.229-.184C5.185-.425 4.974-.601 4.729-.601H.5C.182-.601-.058-.312 0 0"/>
+    <path class="type" transform="matrix(10,0,0,-10,3668.226,1261.905)" d="M0 0C-1.62 0-3.132 .135-4.535 .405-5.939 .675-7.167 1.086-8.22 1.639-9.273 2.191-10.097 2.892-10.69 3.741-11.284 4.589-11.581 5.592-11.581 6.749-11.581 7.109-11.548 7.494-11.48 7.906-11.442 8.14-11.401 8.354-11.358 8.546-11.306 8.78-11.101 8.947-10.861 8.947H-6.586C-6.257 8.947-6.013 8.638-6.092 8.319-6.093 8.316-6.094 8.313-6.094 8.311-6.162 8.041-6.195 7.803-6.195 7.597-6.195 6.903-5.966 6.305-5.507 5.804-5.048 5.303-4.387 4.923-3.523 4.666-2.659 4.409-1.634 4.28-.445 4.28 .769 4.28 1.815 4.37 2.693 4.551 3.57 4.73 4.292 4.981 4.859 5.303 5.426 5.624 5.844 6.016 6.114 6.479 6.384 6.942 6.519 7.443 6.519 7.983 6.519 8.574 6.337 9.075 5.973 9.487 5.608 9.898 5.115 10.258 4.495 10.567 3.873 10.875 3.172 11.145 2.389 11.377 1.606 11.608 .783 11.839-.081 12.071-1.08 12.353-2.085 12.669-3.098 13.016-4.11 13.363-5.041 13.806-5.892 14.346-6.742 14.886-7.417 15.548-7.916 16.332-8.416 17.116-8.666 18.073-8.666 19.205-8.666 20.594-8.362 21.795-7.754 22.811-7.147 23.826-6.311 24.675-5.244 25.356-4.178 26.037-2.95 26.545-1.559 26.88-.169 27.213 1.296 27.381 2.835 27.381 4.346 27.381 5.743 27.259 7.026 27.015 8.307 26.77 9.428 26.397 10.387 25.896 11.344 25.395 12.094 24.745 12.634 23.949 13.174 23.151 13.444 22.213 13.444 21.134 13.444 20.902 13.43 20.638 13.403 20.343 13.385 20.145 13.355 19.91 13.313 19.637 13.274 19.389 13.06 19.205 12.81 19.205H8.655C8.348 19.205 8.109 19.478 8.152 19.782 8.155 19.803 8.158 19.823 8.159 19.842 8.173 19.983 8.18 20.092 8.18 20.169 8.18 21.095 7.727 21.821 6.823 22.348 5.918 22.875 4.683 23.139 3.118 23.139 1.849 23.139 .735 23.01-.223 22.753-1.181 22.496-1.923 22.13-2.45 21.654-2.976 21.178-3.24 20.594-3.24 19.899-3.24 19.437-3.091 19.032-2.794 18.685-2.497 18.338-2.085 18.042-1.559 17.797-1.033 17.553-.425 17.322 .263 17.103 .952 16.885 1.673 16.673 2.43 16.467 3.509 16.158 4.609 15.824 5.73 15.464 6.85 15.104 7.889 14.648 8.848 14.095 9.806 13.542 10.575 12.848 11.156 12.013 11.736 11.177 12.027 10.155 12.027 8.947 12.027 7.301 11.682 5.913 10.994 4.782 10.306 3.65 9.387 2.731 8.24 2.024 7.093 1.317 5.804 .803 4.373 .482 2.942 .161 1.484 0 0 0"/>
+  </g>
+</svg>
+    <span>Modelled and documented by PerchWerks</span>
+  </div>
+</div>
+
+<script src="vendor/three.min.js"></script>
+<script>
+(function(){
+  'use strict';
+  // ------------------------------------------------------------------
+  //  Parameters — identical to the .scad below (LB-corner frame: X from the
+  //  outline's left edge, Y from its bottom edge, Z from the glass front face)
+  // ------------------------------------------------------------------
+  const P = {
+    lb_w:98.7, lb_h:67.7, lb_t:2.8, frame_wall:1.35, foot_w:6.4, foot_h:1.35,
+    lcd_w:96.0, lcd_h:65.0, lcd_t:2.9, ledge_h:8.0,
+    va_w:92.0, va_h:53.0, va_x0:3.35, va_ytop:3.35,
+    aa_w:83.975, aa_h:44.775, aa_x0:7.3625, aa_ytop:6.1125,
+    cols:240, rows:128, dot_pitch:0.35, dot_size:0.325,
+    n_pins:23, pin_pitch:1.27, pin1_x:35.38, pin_w:0.40, pin_t:0.25, pin_tab_h:2.6, pin_len:8.0, pin_y:1.225,
+    led_pin_w:1.8, led_pin_t:0.5, led_a_x:19.35, led_k_x:79.35, led_pin_len:3.8, led_pin_y:2.25,
+    peg_d:1.5, peg_len:2.0, peg_x:1.83, peg_y:2.25,
+    chip_w:10.9, chip_h:1.7, chip_t:0.3, chip_y:6.65,
+    tape_len:13.0, tape_h:8.0, tape_t:0.1, tape_overhang:3.65,
+    notch_len:10.0, notch_top:23.5, notch_depth:1.85
+  };
+  const D = {};
+  D.total_t = P.lcd_t + P.lb_t;
+  D.lcd_x0 = (P.lb_w - P.lcd_w) / 2;
+  D.lcd_y0 = (P.lb_h - P.lcd_h) / 2;
+  D.plate_t = P.lcd_t / 2;
+  D.ledge_z = -D.plate_t;
+  D.va_y0 = P.lb_h - P.va_ytop - P.va_h;
+  D.aa_y0 = P.lb_h - P.aa_ytop - P.aa_h;
+  D.aa_cx = P.aa_x0 + P.aa_w / 2;
+  D.aa_cy = D.aa_y0 + P.aa_h / 2;
+  D.pin_tip_z = -(P.lcd_t + P.pin_len);
+  D.led_tip_z = -(D.total_t + P.led_pin_len);
+  D.peg_tip_z = -(D.total_t + P.peg_len);
+  const pinX = n => P.pin1_x + (n - 1) * P.pin_pitch;
+  const f = (x, d) => (Math.round(x * Math.pow(10, d)) / Math.pow(10, d)).toFixed(d);
+
+  // ------------------------------------------------------------------
+  //  Dimension table
+  // ------------------------------------------------------------------
+  const rows = [
+    ['g', 'Outline (LB)'],
+    ['Overall', `${P.lb_w} × ${P.lb_h} × 9.5`, 'W × H ±0.5, thickness to A/K tips ±0.3'],
+    ['Frame rear face', `Z = −${f(D.total_t,1)}`, `${P.lcd_t} glass + ${P.lb_t} backlight`],
+    ['End caps', `${P.foot_w} wide × ${P.foot_h} tall`, 'bottom corners, full thickness'],
+    ['g', 'LCD glass'],
+    ['Glass', `${f(P.lcd_w,1)} × ${f(P.lcd_h,1)} × ${P.lcd_t} max`, '±0.2, two 1.1 plates + polarizers'],
+    ['Inset in outline', `${f(D.lcd_x0,2)} all round`, 'end caps reach 1.35 below the glass'],
+    ['COG ledge', `${f(P.ledge_h,1)} tall`, 'rear plate only, chip + pads'],
+    ['g', 'Viewing / active area'],
+    ['VA', `${f(P.va_w,1)} × ${f(P.va_h,1)}`, `${P.va_x0} from left, ${P.va_ytop} from top`],
+    ['AA', `${P.aa_w} × ${P.aa_h}`, `${f(P.aa_x0,3)} from left, ${P.aa_ytop} from top`],
+    ['AA centre', `X ${f(D.aa_cx,2)}  Y ${f(D.aa_cy,2)}`, `from outline corner; +${f(D.aa_cy - P.lb_h/2,2)} above outline centre`],
+    ['Dots', `${P.cols} × ${P.rows}`, `${P.dot_size} square on ${P.dot_pitch} pitch`],
+    ['g', 'Signal pins (23)'],
+    ['Pitch', `P${P.pin_pitch} × 22 = ${f(P.pin_pitch*22,2)}`, 'pin 1 left, pin 23 right (front view)'],
+    ['Pin 1 / pin 23', `X ${P.pin1_x} / ${f(pinX(P.n_pins),2)}`, `Y ${P.pin_y} (leg centreline)`],
+    ['Section', `${f(P.pin_w,2)} × ${P.pin_t}`, '±0.05 thick'],
+    ['Length', `${f(P.pin_len,1)} past glass rear`, `tip at Z = −${f(-D.pin_tip_z,1)}`],
+    ['g', 'LED backlight pins'],
+    ['A / K', `X ${P.led_a_x} / ${P.led_k_x}`, `${f(P.led_k_x-P.led_a_x,1)} apart, Y ${P.led_pin_y}`],
+    ['Section', `${P.led_pin_w} wide`, '0.5 thick (estimated)'],
+    ['Length', `${P.led_pin_len} past frame`, `tip at Z = −${f(-D.led_tip_z,1)} (overall)`],
+    ['g', 'Locating pegs'],
+    ['2 × Ø', `${P.peg_d}`, `${P.peg_x} from each edge, ${f(P.lb_w-2*P.peg_x,1)} apart`],
+    ['Length', `${f(P.peg_len,1)} past frame`, `tip at Z = −${f(-D.peg_tip_z,1)}`]
+  ];
+  const dimsEl = document.getElementById('dims');
+  rows.forEach(r => {
+    if (r[0] === 'g') { const g = document.createElement('div'); g.className = 'g'; g.textContent = r[1]; dimsEl.appendChild(g); return; }
+    const k = document.createElement('div'); k.className = 'k'; k.textContent = r[0];
+    const v = document.createElement('div'); v.className = 'v'; v.textContent = r[1];
+    const n = document.createElement('div'); n.className = 'n'; n.textContent = r[2] || '';
+    dimsEl.appendChild(k); dimsEl.appendChild(v); dimsEl.appendChild(n);
+  });
+
+  // ------------------------------------------------------------------
+  //  Copy button
+  // ------------------------------------------------------------------
+  const copyBtn = document.getElementById('copyBtn'), pre = document.getElementById('scad');
+  copyBtn.addEventListener('click', () => {
+    const text = pre.textContent;
+    const done = (msg) => { copyBtn.textContent = msg; copyBtn.classList.add('done'); setTimeout(() => { copyBtn.textContent = 'Copy script'; copyBtn.classList.remove('done'); }, 1800); };
+    const fallback = () => { try { const r = document.createRange(); r.selectNodeContents(pre); const s = window.getSelection(); s.removeAllRanges(); s.addRange(r); done('Selected, press copy'); } catch (e) { done('Select the text to copy'); } };
+    if (navigator.clipboard && navigator.clipboard.writeText) navigator.clipboard.writeText(text).then(() => done('Copied'), fallback);
+    else fallback();
+  });
+
+  // ==================================================================
+  //  1-bit UI core — written the way the C version will be.
+  //  Framebuffer is row-major here for clarity (1 byte per dot, 1 = dark);
+  //  the C build keeps the UC1608 page layout and the primitives stay the same.
+  // ==================================================================
+  const SW = 240, SH = 128;
+  const fb = new Uint8Array(SW * SH);
+  let clip = { x0: 0, y0: 0, x1: SW, y1: SH };
+  function setClip(x, y, w, h) { clip = { x0: Math.max(0, x | 0), y0: Math.max(0, y | 0), x1: Math.min(SW, (x + w) | 0), y1: Math.min(SH, (y + h) | 0) }; }
+  function resetClip() { clip = { x0: 0, y0: 0, x1: SW, y1: SH }; }
+  function fbClear(v) { fb.fill(v); }
+  function fbPx(x, y, v) { x |= 0; y |= 0; if (x < clip.x0 || y < clip.y0 || x >= clip.x1 || y >= clip.y1) return; fb[y * SW + x] = v; }
+  function fbFill(x, y, w, h, v) {
+    x |= 0; y |= 0; w |= 0; h |= 0;
+    const x0 = Math.max(x, clip.x0), x1 = Math.min(x + w, clip.x1), y0 = Math.max(y, clip.y0), y1 = Math.min(y + h, clip.y1);
+    if (x1 <= x0 || y1 <= y0) return;
+    for (let yy = y0; yy < y1; yy++) fb.fill(v, yy * SW + x0, yy * SW + x1);
+  }
+  function fbRect(x, y, w, h, v) { fbFill(x, y, w, 1, v); fbFill(x, y + h - 1, w, 1, v); fbFill(x, y, 1, h, v); fbFill(x + w - 1, y, 1, h, v); }
+  function fbInvert(x, y, w, h) {
+    const x0 = Math.max(x | 0, clip.x0), x1 = Math.min((x + w) | 0, clip.x1), y0 = Math.max(y | 0, clip.y0), y1 = Math.min((y + h) | 0, clip.y1);
+    for (let yy = y0; yy < y1; yy++) for (let i = yy * SW + x0, e = yy * SW + x1; i < e; i++) fb[i] ^= 1;
+  }
+  function fbDither(x, y, w, h, v, level) {   // level 1 = 25 %, 2 = 50 %
+    const x0 = Math.max(x | 0, clip.x0), x1 = Math.min((x + w) | 0, clip.x1), y0 = Math.max(y | 0, clip.y0), y1 = Math.min((y + h) | 0, clip.y1);
+    for (let yy = y0; yy < y1; yy++) for (let xx = x0; xx < x1; xx++)
+      if (level === 2 ? ((xx + yy) & 1) === 0 : ((xx & 1) === 0 && (yy & 1) === 0)) fb[yy * SW + xx] = v;
+  }
+  function fbBlit(bmp, x, y, v) {              // set pixels of bmp become v
+    for (let j = 0; j < bmp.h; j++) for (let i = 0; i < bmp.w; i++) if (bmp.bits[j * bmp.w + i]) fbPx(x + i, y + j, v);
+  }
+  function fbBlitXform(bmp, cx, cy, s, ang, v) {   // scale s and rotate ang about the bitmap centre, placed at (cx, cy)
+    if (s <= 0.001) return;
+    const c = Math.cos(ang), sn = Math.sin(ang), r = Math.ceil(s * Math.hypot(bmp.w, bmp.h) / 2) + 1;
+    const hw = bmp.w / 2, hh = bmp.h / 2, inv = 1 / s;
+    const y0 = Math.max(clip.y0, Math.floor(cy - r)), y1 = Math.min(clip.y1 - 1, Math.ceil(cy + r));
+    const x0 = Math.max(clip.x0, Math.floor(cx - r)), x1 = Math.min(clip.x1 - 1, Math.ceil(cx + r));
+    for (let y = y0; y <= y1; y++) {
+      const dy = y + 0.5 - cy;
+      for (let x = x0; x <= x1; x++) {
+        const dx = x + 0.5 - cx;
+        const u = (dx * c + dy * sn) * inv + hw, w = (-dx * sn + dy * c) * inv + hh;
+        if (u < 0 || w < 0 || u >= bmp.w || w >= bmp.h) continue;
+        if (bmp.bits[(w | 0) * bmp.w + (u | 0)]) fb[y * SW + x] = v === 2 ? fb[y * SW + x] ^ 1 : v;   // v = 2 inverts
+      }
+    }
+  }
+  function unpackBitmap(src) {                 // base64, row-major, MSB first → 1 byte per dot
+    const bin = atob(src.b64), bits = new Uint8Array(src.w * src.h);
+    for (let i = 0; i < bits.length; i++) bits[i] = (bin.charCodeAt(i >> 3) >> (7 - (i & 7))) & 1;
+    return { w: src.w, h: src.h, bits };
+  }
+
+  // ---- 5 x 7 font: 5 bytes per glyph, one byte per column, bit 0 = top row ----
+  const F57 = {
+    ' ': [0,0,0,0,0], '0': [0x3E,0x51,0x49,0x45,0x3E], '1': [0x00,0x42,0x7F,0x40,0x00], '2': [0x42,0x61,0x51,0x49,0x46],
+    '3': [0x21,0x41,0x45,0x4B,0x31], '4': [0x18,0x14,0x12,0x7F,0x10], '5': [0x27,0x45,0x45,0x45,0x39], '6': [0x3C,0x4A,0x49,0x49,0x30],
+    '7': [0x01,0x71,0x09,0x05,0x03], '8': [0x36,0x49,0x49,0x49,0x36], '9': [0x06,0x49,0x49,0x29,0x1E],
+    'A': [0x7E,0x11,0x11,0x11,0x7E], 'B': [0x7F,0x49,0x49,0x49,0x36], 'C': [0x3E,0x41,0x41,0x41,0x22], 'D': [0x7F,0x41,0x41,0x22,0x1C],
+    'E': [0x7F,0x49,0x49,0x49,0x41], 'F': [0x7F,0x09,0x09,0x09,0x01], 'G': [0x3E,0x41,0x49,0x49,0x7A], 'H': [0x7F,0x08,0x08,0x08,0x7F],
+    'I': [0x00,0x41,0x7F,0x41,0x00], 'J': [0x20,0x40,0x41,0x3F,0x01], 'K': [0x7F,0x08,0x14,0x22,0x41], 'L': [0x7F,0x40,0x40,0x40,0x40],
+    'M': [0x7F,0x02,0x0C,0x02,0x7F], 'N': [0x7F,0x04,0x08,0x10,0x7F], 'O': [0x3E,0x41,0x41,0x41,0x3E], 'P': [0x7F,0x09,0x09,0x09,0x06],
+    'Q': [0x3E,0x41,0x51,0x21,0x5E], 'R': [0x7F,0x09,0x19,0x29,0x46], 'S': [0x46,0x49,0x49,0x49,0x31], 'T': [0x01,0x01,0x7F,0x01,0x01],
+    'U': [0x3F,0x40,0x40,0x40,0x3F], 'V': [0x1F,0x20,0x40,0x20,0x1F], 'W': [0x3F,0x40,0x38,0x40,0x3F], 'X': [0x63,0x14,0x08,0x14,0x63],
+    'Y': [0x07,0x08,0x70,0x08,0x07], 'Z': [0x61,0x51,0x49,0x45,0x43],
+    ':': [0x00,0x36,0x36,0x00,0x00], '.': [0x00,0x60,0x60,0x00,0x00], '-': [0x08,0x08,0x08,0x08,0x08], '+': [0x08,0x08,0x3E,0x08,0x08],
+    '%': [0x23,0x13,0x08,0x64,0x62], '/': [0x20,0x10,0x08,0x04,0x02], '!': [0x00,0x00,0x5F,0x00,0x00],
+    '●': [0x1C,0x3E,0x3E,0x3E,0x1C], '○': [0x1C,0x22,0x22,0x22,0x1C], '▲': [0x70,0x7C,0x7F,0x7C,0x70], '▼': [0x07,0x1F,0x7F,0x1F,0x07]
+  };
+  function text57(x, y, str, v, scale) {       // returns the advance
+    scale = scale || 1; let cx = x;
+    for (const ch of str) {
+      const g = F57[ch] || F57[' '];
+      for (let i = 0; i < 5; i++) for (let j = 0; j < 7; j++) if (g[i] >> j & 1) fbFill(cx + i * scale, y + j * scale, scale, scale, v);
+      cx += 6 * scale;
+    }
+    return cx - x - scale;
+  }
+  const width57 = (str, scale) => str.length * 6 * (scale || 1) - (scale || 1);
+
+  // ---- seven-segment font drawn from overlapping rectangles, any height (chunky dash style) ----
+  const SEGMAP = { '0': 0x3F, '1': 0x06, '2': 0x5B, '3': 0x4F, '4': 0x66, '5': 0x6D, '6': 0x7D, '7': 0x07, '8': 0x7F, '9': 0x6F, '-': 0x40 };
+  function segMetrics(h) { const t = Math.max(1, Math.round(h * 0.16)); return { w: Math.max(5, Math.round(h * 0.55)), t, half: t >> 1, adv: Math.max(1, Math.round(h * 0.09)) }; }
+  function segChar(x, y, h, ch, v) {           // returns the advance
+    const m = segMetrics(h), w = m.w, t = m.t, half = m.half;
+    if (ch === ':') { fbFill(x, y + Math.round(h * 0.30) - half, t, t, v); fbFill(x, y + Math.round(h * 0.70) - half, t, t, v); return t + m.adv + 1; }
+    if (ch === '.') { fbFill(x, y + h - t, t, t, v); return t + m.adv + 1; }
+    if (ch === '+') { const c = Math.round(w / 2), mid = Math.round(h / 2); fbFill(x + c - half, y + mid - Math.round(w / 2), t, w, v); fbFill(x + c - Math.round(w / 2), y + mid - half, w, t, v); return w + m.adv; }
+    if (ch === ' ') return (w >> 1) + m.adv;
+    const seg = SEGMAP[ch]; if (seg === undefined) return w + m.adv;
+    if (ch === '1') { const cx = x + ((w - t) >> 1); fbFill(cx, y, t, h, v); if (t >= 3) { const nv = v ^ 1, c = t >= 6 ? 2 : 1; for (let i = 0; i < c; i++) for (let j = 0; j < c - i; j++) { fbPx(cx + i, y + j, nv); fbPx(cx + t - 1 - i, y + j, nv); fbPx(cx + i, y + h - 1 - j, nv); fbPx(cx + t - 1 - i, y + h - 1 - j, nv); } } return w + m.adv; }
+    const midTop = y + ((h - t) >> 1), midBot = midTop + t;        // the middle bar's rows
+    if (seg & 0x01) fbFill(x, y, w, t, v);                            // a
+    if (seg & 0x40) fbFill(x, midTop, w, t, v);                       // g
+    if (seg & 0x08) fbFill(x, y + h - t, w, t, v);                    // d
+    if (seg & 0x20) fbFill(x, y, t, midBot - y, v);                   // f
+    if (seg & 0x02) fbFill(x + w - t, y, t, midBot - y, v);           // b
+    if (seg & 0x10) fbFill(x, midTop, t, y + h - midTop, v);          // e
+    if (seg & 0x04) fbFill(x + w - t, midTop, t, y + h - midTop, v);  // c
+    if (t >= 3) {                                                     // round the glyph's outer corners
+      const c = t >= 6 ? 2 : 1, nv = v ^ 1;
+      const corner = (cx, cy, dx, dy) => { for (let i = 0; i < c; i++) for (let j = 0; j < c - i; j++) fbPx(cx + i * dx, cy + j * dy, nv); };
+      if (seg & 0x21) corner(x, y, 1, 1); if (seg & 0x03) corner(x + w - 1, y, -1, 1);
+      if (seg & 0x18) corner(x, y + h - 1, 1, -1); if (seg & 0x0C) corner(x + w - 1, y + h - 1, -1, -1);
+      if (!(seg & 0x01)) { if (seg & 0x20) corner(x + t - 1, y, -1, 1); if (seg & 0x02) corner(x + w - t, y, 1, 1); }
+      if (!(seg & 0x08)) { if (seg & 0x10) corner(x + t - 1, y + h - 1, -1, -1); if (seg & 0x04) corner(x + w - t, y + h - 1, 1, -1); }
+    }
+    return w + m.adv;
+  }
+  function segWidth(h, str) { let w = 0; const m = segMetrics(h); for (const ch of str) w += (ch === ':' || ch === '.') ? m.t + m.adv + 1 : (ch === ' ' ? (m.w >> 1) + m.adv : m.w + m.adv); return w - m.adv; }
+  function segText(x, y, h, str, v, align) {
+    if (align === 'center') x -= segWidth(h, str) >> 1; else if (align === 'right') x -= segWidth(h, str);
+    let cx = x; for (const ch of str) cx += segChar(cx, y, h, ch, v); return cx - x;
+  }
+  function segTextRoll(x, y, h, oldStr, newStr, k, v, align) {   // odometer: digits that differ scroll up by k (0..1)
+    if (align === 'center') x -= segWidth(h, newStr) >> 1;
+    const m = segMetrics(h); let cx = x;
+    for (let i = 0; i < newStr.length; i++) {
+      const ch = newStr[i], och = oldStr[i] || ' ';
+      const adv = (ch === ':' || ch === '.') ? m.t + m.adv + 1 : m.w + m.adv;
+      if (ch === och || k >= 1) segChar(cx, y, h, ch, v);
+      else {
+        const dy = Math.round(k * (h + 4));
+        setClip(cx, y, adv, h); segChar(cx, y - dy, h, och, v); segChar(cx, y + h + 4 - dy, h, ch, v); resetClip();
+      }
+      cx += adv;
+    }
+  }
+
+  // ---- easing, timing, hashing ----
+  const ease = {
+    linear: t => t, outCubic: t => 1 - Math.pow(1 - t, 3), inCubic: t => t * t * t,
+    inOutCubic: t => t < 0.5 ? 4 * t * t * t : 1 - Math.pow(-2 * t + 2, 3) / 2,
+    outBack: t => 1 + 2.70158 * Math.pow(t - 1, 3) + 1.70158 * Math.pow(t - 1, 2),
+    outElastic: t => t === 0 ? 0 : t === 1 ? 1 : Math.pow(2, -10 * t) * Math.sin((t * 10 - 0.75) * (2 * Math.PI / 3)) + 1
+  };
+  const clamp01 = t => t < 0 ? 0 : t > 1 ? 1 : t;
+  const tw = (t0, dur, now, fn) => (fn || ease.linear)(clamp01((now - t0) / dur));
+  function hash2(x, y) { let h = Math.imul(x | 0, 374761393) + Math.imul(y | 0, 668265263) | 0; h = Math.imul(h ^ (h >>> 13), 1274126177); return ((h ^ (h >>> 16)) >>> 0) / 4294967296; }
+  function mulberry32(a) { return function () { a |= 0; a = a + 0x6D2B79F5 | 0; let t = Math.imul(a ^ a >>> 15, 1 | a); t = t + Math.imul(t ^ t >>> 7, 61 | t) ^ t; return ((t ^ t >>> 14) >>> 0) / 4294967296; }; }
+  const fmtTime = ms => { ms = Math.max(0, Math.round(ms)); const m = (ms / 60000) | 0, s = ((ms % 60000) / 1000) | 0, h = ((ms % 1000) / 10) | 0; return `${m}:${s < 10 ? '0' : ''}${s}.${h < 10 ? '0' : ''}${h}`; };
+  const fmtDelta = ms => (ms < 0 ? '-' : '+') + (Math.abs(ms) / 1000).toFixed(2);
+
+  const LOGO_SRC = {
+  HI: { w: 240, h: 105, b64: "AAAAH/////////////////////////////gAAAAAAAAAP/////////////////////////////wAAAAAAAAAP/////////////////////////////4AAAAAAAAAH/////////////////////////////8AAAAAAAAAD/////////////////////////////8AAAAAAAAAA/////////////////////////////8AAAAAAAAAAH////////////////////////////8AAAAAAAAAAA////////////////////////////8AAAAAAAAAAAP///////////////////////////8AAAAAAAAAAAB///////////////////////////4AAAAAAAAAAAAP//////////////////////////wAAAAAAAAAAAAB//////////////////////////gAAAAAAAAAAAAAf/////////////////////////AAAAAAAAAAAAAAD////////////////////////+AAAAAAAAAAAAAAAf///////////////////////8AAAAAAAAAAAAAAAD///////////////////////4AAAAAAAAAAAAAAAA///////////////////////wAAAAAAAAAAAAAAAAH//////////////////////gAAAAAAAAAAAAAAAAA//////////////////////AAAAAAAAAAAAAAAAAAH////////////////////+AAAAAAAAAAAAAAAAAAB////////////////////8AAAAAAAAAAAAAAAAAAAP///////////////////4AAAAAAAAAAAAAAAAAAAB///////////////////wAAAAAAAAAAAAAAAAAAAAP//////////////////gAAAAAAAAAAAAAAAAAAAAD//////////////////AAAAAAAAAAAAAAAAAAAAAAf////////////////+AAAAAAAAAAAAAAAAAAAAAAD////////////////8AAAAAAAAAAAAAAAAAAAAAAA////////////////4AAAAAAAAAAAAAAAAAAAAAAAH///////////////wAAAAAAAAAAAAAAAAAAAAAAAA///////////////gAAAAAAAAAAAAAAAAAAAAAAAAH//////////////AAAAAAAAAAAAAAAAAAAAAAAAAB/////////////+AAAAAAAAAAAAAAAAAAAAAAAAAAP////////////8AAAAAAAAAAAAAAAAAAAAAAAAAAB////////////4AAAAAAAAAAAAAAAAAAAAAAAAAAAP///////////wAAAAAAAAAAAAAAAAAAAAAAAAAAAD///////////gAAAAAAAAAAAAAAAAAAAAAAAAAAAAf//////////AAAAAAAAAAAAAAAAAAAAAAAAAAAAAD/////////+AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAf////////8AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAP////////4AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAH////////4AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAH////////4AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAP////////8AAAAAAAAAAf//////////////////////////////////////w///////////////////////////////////////8///////////////////////////////////////+///////////////////////////////////////+f///////////////////////////////////////H///////////////////////////////////////A///////////////////////////////////////AH//////////////////////////////////////AB//////////////////////////////////////AAP////////////////////////////////////+AAB////////////////////////////////////8AAAP///////////////////////////////////4AAAD///////////////////////////////////wAAAAf//////////////////////////////////gAAAAD//////////////////////////////////AAAAAAf////////////////////////////////+AAAAAAH////////////////////////////////8AAAAAAA////////////////////////////////4AAAAAAAH///////////////////////////////wAAAAAAAB///////////////////////////////gAAAAAAAAP//////////////////////////////AAAAAAAAAB/////////////////////////////+AAAAAAAAAAP////////////////////////////8AAAAAAAAAAD////////////////////////////4AAAAAAAAAAAf///////////////////////////wAAAAAAAAAAAD///////////////////////////gAAAAAAAAAAAAf//////////////////////////AAAAAAAAAAAAAH/////////////////////////+AAAAAAAAAAAAAA/////////////////////////8AAAAAAAAAAAAAAH////////////////////////4AAAAAAAAAAAAAAA////////////////////////wAAAAAAAAAAAAAAAP///////////////////////gAAAAAAAAAAAAAAAB///////////////////////AAAAAAAAAAAAAAAAAP/////////////////////+AAAAAAAAAAAAAAAAAB/////////////////////8AAAAAAAAAAAAAAAAAAf////////////////////4AAAAAAAAAAAAAAAAAAD////////////////////wAAAAAAAAAAAAAAAAAAAf///////////////////gAAAAAAAAAAAAAAAAAAAH///////////////////AAAAAAAAAAAAAAAAAAAAA//////////////////+AAAAAAAAAAAAAAAAAAAAAH/////////////////8AAAAAAAAAAAAAAAAAAAAAA/////////////////4AAAAAAAAAAAAAAAAAAAAAAP////////////////wAAAAAAAAAAAAAAAAAAAAAAB////////////////gAAAAAAAAAAAAAAAAAAAAAAAP///////////////AAAAAAAAAAAAAAAAAAAAAAAAB//////////////+AAAAAAAAAAAAAAAAAAAAAAAAAf/////////////8AAAAAAAAAAAAAAAAAAAAAAAAAD/////////////4AAAAAAAAAAAAAAAAAAAAAAAAAAf////////////wAAAAAAAAAAAAAAAAAAAAAAAAAAD////////////gAAAAAAAAAAAAAAAAAAAAAAAAAAA////////////AAAAAAAAAAAAAAAAAAAAAAAAAAAAH//////////+AAAAAAAAAAAAAAAAAAAAAAAAAAAAA//////////4AAAAAAAAAAAAAAAAAAAAAAAAAAAAAP/////////wAAAAAAAAAAAAAAAAAAAAAAAAAAAAAB/////////gAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAP///////+AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAB///////4AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAf//////gAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAD/////+AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAf////wAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAD///8AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAH//AAAAAAAAAAA" },
+  MID: { w: 120, h: 52, b64: "AAf//////////////gAAAAf//////////////wAAAAH//////////////wAAAAB//////////////wAAAAAP/////////////wAAAAAB/////////////gAAAAAAP////////////AAAAAAAD///////////+AAAAAAAAf//////////8AAAAAAAAD//////////4AAAAAAAAAf/////////wAAAAAAAAAH/////////gAAAAAAAAAA/////////AAAAAAAAAAAH///////+AAAAAAAAAAAA///////8AAAAAAAAAAAAP//////4AAAAAAAAAAAAB//////wAAAAAAAAAAAAAP/////gAAAAAAAAAAAAAB/////AAAAAAAAAAAAAAAf///+AAAAAAAAAAAAAAAf///8AAAAAf//////////////////8///////////////////+////////////////////H///////////////////A///////////////////AP/////////////////+AB/////////////////8AAP////////////////4AAB////////////////wAAAf///////////////gAAAD///////////////AAAAAf/////////////+AAAAAD/////////////8AAAAAAf////////////4AAAAAAH////////////wAAAAAAA////////////gAAAAAAAH///////////AAAAAAAAA//////////+AAAAAAAAAP/////////8AAAAAAAAAB/////////4AAAAAAAAAAP////////wAAAAAAAAAAB////////gAAAAAAAAAAAf///////AAAAAAAAAAAAD//////+AAAAAAAAAAAAAf/////8AAAAAAAAAAAAAD/////4AAAAAAAAAAAAAA/////gAAAAAAAAAAAAAAH////AAAAAAAAAAAAAAAA///8AAAAAAAAAAAAAAAAH//wAAAAAAAAAAAAAAAAA/8AAAAA" },
+  SM: { w: 26, h: 11, b64: "H//8AP//AAf/gAA/wGAH8B////D///gH//wAP/4AAf8AAA8A" }
+};
+  const LOGO = { hi: unpackBitmap(LOGO_SRC.HI), mid: unpackBitmap(LOGO_SRC.MID), sm: unpackBitmap(LOGO_SRC.SM) };
+
+  // ---- session simulation: a direct-drive kart lap, three sectors ----
+  const SECTOR_BASE = [20100, 22300, 20100];
+  const sim = {
+    mul: 4, auto: true, lap: 12, t: 24300, rpm: 9800, rpmT: 9800, topRpm: 14200, phase: 'accel', corners: [], nextCorner: 0, cornerMin: 7000,
+    sectorIdx: 1, sectorStart: 20150, sectorEnds: [20150, 42400, 62500], bests: [20400, 22600, 20300], bestLap: 61900, lastLap: 62870,
+    sectorState: ['done', 'current', 'pending'], completed: [20150, 0, 0], vbat: 12.4, sats: 12, sd: 61, peak: 0, peakT: 0, rng: mulberry32(7),
+    delta: -430
+  };
+  function planCorners(from) {
+    const r = sim.rng; sim.corners = []; let t = from + 1500 + r() * 2000;
+    while (t < sim.sectorEnds[2] - 3000) { sim.corners.push(t); t += 6500 + r() * 6500; }
+    sim.nextCorner = 0;
+  }
+  function planLap() {
+    const r = sim.rng, ends = []; let acc = 0;
+    for (let k = 0; k < 3; k++) { acc += SECTOR_BASE[k] + (r() - 0.5) * 1400; ends.push(Math.round(acc)); }
+    sim.sectorEnds = ends; sim.sectorIdx = 0; sim.sectorStart = 0; sim.t = 0;
+    sim.sectorState = ['current', 'pending', 'pending']; sim.completed = [0, 0, 0];
+    planCorners(0);
+  }
+  planCorners(sim.t);
+  const fx = [];                                   // transient overlay animations
+  function pushFx(o) { fx.push(o); if (fx.length > 12) fx.shift(); }
+  function endSector(now, mode) {                  // mode: 'auto' | 'purple' | 'normal'
+    const k = sim.sectorIdx, st = sim.t - sim.sectorStart;
+    const purple = mode === 'purple' || (mode === 'auto' && st < sim.bests[k]);
+    if (purple) sim.bests[k] = Math.min(sim.bests[k], st);
+    sim.completed[k] = st; sim.sectorState[k] = purple ? 'purple' : 'done';
+    pushFx({ type: purple ? 'purple' : 'sector', k, t0: now, seed: (now | 0) ^ (k * 7919) });
+    if (k < 2) { sim.sectorIdx = k + 1; sim.sectorStart = sim.t; sim.sectorState[k + 1] = 'current'; }
+  }
+  function endLap(now) {
+    const lapTime = sim.t, best = lapTime < sim.bestLap;
+    pushFx({ type: 'lap', t0: now, lapTime, best, oldLap: sim.lap, seed: now | 0 });
+    sim.lastLap = lapTime; if (best) sim.bestLap = lapTime; sim.lap++;
+    planLap();
+  }
+  function simStep(dt, now) {                      // dt in sim ms
+    const r = sim.rng;
+    if (sim.phase === 'accel') {
+      sim.rpmT += (sim.topRpm - sim.rpmT) * 0.6 * dt / 1000;
+      if (sim.nextCorner < sim.corners.length && sim.t >= sim.corners[sim.nextCorner] - 900) { sim.phase = 'brake'; sim.cornerMin = 6400 + r() * 2800; }
+    } else {
+      sim.rpmT -= 9000 * dt / 1000;
+      if (sim.rpmT <= sim.cornerMin) { sim.rpmT = sim.cornerMin; sim.phase = 'accel'; sim.nextCorner++; sim.topRpm = 13600 + r() * 1300; }
+    }
+    const rpmN = sim.rpmT + (r() - 0.5) * 120;
+    sim.rpm += (rpmN - sim.rpm) * Math.min(1, dt / 60);
+    if (sim.rpm > sim.peak) { sim.peak = sim.rpm; sim.peakT = now; } else if (now - sim.peakT > 600) sim.peak = Math.max(sim.rpm, sim.peak - 2500 * dt / 1000);
+    sim.t += dt;
+    let d = 0; for (let k = 0; k < sim.sectorIdx; k++) d += sim.completed[k] - sim.bests[k];
+    const el = sim.t - sim.sectorStart, plan = sim.sectorEnds[sim.sectorIdx] - (sim.sectorIdx ? sim.sectorEnds[sim.sectorIdx - 1] : 0);
+    d += el - sim.bests[sim.sectorIdx] * Math.min(1, el / plan);
+    sim.delta += (d - sim.delta) * Math.min(1, dt / 400);
+    sim.vbat = 12.4 - 0.08 * Math.sin(now / 9000);
+    if (!sim.auto) return;
+    if (sim.sectorIdx < 2 && sim.t >= sim.sectorEnds[sim.sectorIdx]) endSector(now, 'auto');
+    else if (sim.sectorIdx === 2 && sim.t >= sim.sectorEnds[2]) { endSector(now, 'auto'); endLap(now); }
+  }
+
+  // ---- screen: lap timer ----
+  const SECT_X = [150, 166, 182];
+  function drawHeader(now, opts) {
+    fbFill(0, 0, SW, 12, 1);
+    if (!opts || !opts.noLogo) fbBlit(LOGO.sm, 2, 0, 0);
+    const lapFx = fx.find(e => e.type === 'lap' && now - e.t0 > 700 && now - e.t0 < 1100);
+    text57(32, 2, 'LAP ', 0);
+    if (lapFx) { const k = tw(lapFx.t0 + 700, 400, now, ease.outCubic), dy = Math.round(k * 9); setClip(56, 0, 14, 12); text57(56, 2 - dy, String(lapFx.oldLap), 0); text57(56, 11 - dy, String(sim.lap), 0); resetClip(); }
+    else text57(56, 2, String(sim.lap), 0);
+    for (let k = 0; k < 3; k++) {
+      const x = SECT_X[k], st = sim.sectorState[k];
+      if (st === 'purple') { fbFill(x, 1, 14, 10, 0); text57(x + 5, 2, String(k + 1), 1); }
+      else { fbRect(x, 1, 14, 10, 0); if (st === 'done') fbDither(x + 1, 2, 12, 8, 0, 2); if (st !== 'pending') { fbFill(x + 4, 2, 7, 8, st === 'done' ? 0 : 1); text57(x + 5, 2, String(k + 1), st === 'done' ? 1 : 0); } }
+    }
+    text57(200, 2, fmtTime(sim.bestLap), 0);
+  }
+  function drawBigTime(now, override) {
+    const lapFx = fx.find(e => e.type === 'lap' && now - e.t0 < 1100);
+    let str = override !== undefined ? override : fmtTime(sim.t);
+    if (lapFx) {
+      const age = now - lapFx.t0;
+      if (age < 700) { segText(120, 14, 46, fmtTime(lapFx.lapTime), 1, 'center'); if (((age / 120) | 0) & 1) fbInvert(36, 12, 168, 50); return; }
+      segTextRoll(120, 14, 46, fmtTime(lapFx.lapTime), str, tw(lapFx.t0 + 700, 400, now, ease.inOutCubic), 1, 'center'); return;
+    }
+    segText(120, 14, 46, str, 1, 'center');
+  }
+  function drawSpeedDelta(now, rpmShown) {
+    const mph = Math.round(rpmShown / 14000 * 72);
+    const w = segText(6, 64, 14, String(mph), 1); text57(6 + w + 4, 71, 'MPH', 1);
+    const d = sim.delta, px = Math.max(-46, Math.min(46, Math.round(d / 1000 * 30)));
+    fbFill(120, 66, 1, 10, 1); fbFill(74, 70, 92, 1, 1);
+    if (px < 0) fbFill(120 + px, 68, -px, 6, 1); else if (px > 0) fbDither(121, 68, px, 6, 1, 2);
+    segText(234, 64, 14, fmtDelta(d), 1, 'right');
+  }
+  function drawRpm(now, rpmShown) {
+    text57(4, 86, 'RPM', 1);
+    const shown = Math.round(rpmShown / 10) * 10;
+    segText(28, 82, 14, String(Math.max(0, shown)), 1);
+    const bx = 4, by = 98, bw = 232, bh = 10;
+    fbRect(bx, by, bw, bh, 1);
+    const fw = Math.round((bw - 2) * Math.min(1, rpmShown / 16000));
+    fbFill(bx + 1, by + 1, fw, bh - 2, 1);
+    const rx = bx + 1 + Math.round((bw - 2) * 14000 / 16000);
+    if (fw < rx - bx - 1) fbDither(rx, by + 1, bx + bw - 1 - rx, bh - 2, 1, 1);
+    for (let r = 1000; r < 16000; r += 1000) { const x = bx + 1 + Math.round((bw - 2) * r / 16000); fbFill(x, by + bh, 1, r % 2000 ? 2 : 3, 1); }
+    const px = bx + 1 + Math.round((bw - 2) * Math.min(1, sim.peak / 16000));
+    if (sim.peak > rpmShown + 100) fbInvert(px - 1, by - 1, 2, bh + 2);
+    if (rpmShown > 14000 && ((now / 62) | 0) & 1) fbInvert(bx, by, bw, bh);   // over-rev: blink the bar
+  }
+  function drawStatus(now) {
+    const log = ((now / 500) | 0) & 1 ? '●' : '○';
+    text57(4, 118, `GPS ${sim.sats}  LOG ${log}  ${sim.vbat.toFixed(1)}V  SD ${sim.sd}%`, 1);
+  }
+  function dissolve(x, y, w, h, k, salt) {       // keep only pixels whose hash is below k
+    for (let yy = y; yy < y + h; yy++) for (let xx = x; xx < x + w; xx++) if (hash2(xx + salt, yy) > k) fb[yy * SW + xx] = 0;
+  }
+  function drawSparkles(e, now, cx, cy, n, life, g0) {
+    const r = mulberry32(e.seed), age = now - e.t0; if (age > life) return;
+    const t = age / 1000;
+    for (let i = 0; i < n; i++) {
+      const a = r() * Math.PI * 2, sp = 70 + r() * 150, ph = r();
+      if (hash2(i, (now / 40) | 0) > 1 - age / life) continue;
+      const x = Math.round(cx + Math.cos(a) * sp * t), y = Math.round(cy + Math.sin(a) * sp * t + 0.5 * g0 * t * t);
+      if (ph > 0.5) { fbInvert(x - 1, y, 3, 1); fbInvert(x, y - 1, 1, 1); fbInvert(x, y + 1, 1, 1); } else fbInvert(x, y, 1, 1);
+    }
+  }
+  function drawFx(now) {
+    for (const e of fx) {
+      const age = now - e.t0;
+      if (e.type === 'purple') {
+        const bx = SECT_X[e.k] + 7, byc = 6;
+        if (age < 900) {
+          const s = tw(e.t0, 260, now, ease.outBack), w = Math.round(116 * s), h = Math.round(32 * s), cx = 120, cy = 42;
+          fbFill(cx - (w >> 1), cy - (h >> 1), w, h, 1);
+          if (s > 0.85) { text57(cx - (width57('PURPLE', 2) >> 1), cy - 13, 'PURPLE', 0, 2); text57(cx - (width57('SECTOR ' + (e.k + 1), 1) >> 1), cy + 4, 'SECTOR ' + (e.k + 1), 0, 1); }
+          if (((age / 80) | 0) & 1 && s > 0.9) fbRect(cx - (w >> 1) + 2, cy - (h >> 1) + 2, w - 4, h - 4, 0);
+          drawSparkles(e, now, 120, 42, 26, 900, 220);
+        } else if (age < 1250) {                         // fly into the sector box, text shrinks in steps
+          const k = tw(e.t0 + 900, 350, now, ease.inCubic), cx = Math.round(120 + (bx - 120) * k), cy = Math.round(42 + (byc - 42) * k);
+          const w = Math.round(116 + (14 - 116) * k), h = Math.round(32 + (10 - 32) * k);
+          fbFill(cx - (w >> 1), cy - (h >> 1), w, h, 1);
+          setClip(cx - (w >> 1), cy - (h >> 1), w, h);
+          if (w >= 84) text57(cx - (width57('PURPLE', 2) >> 1), cy - 7, 'PURPLE', 0, 2);
+          else if (w >= 40) text57(cx - (width57('PURPLE', 1) >> 1), cy - 3, 'PURPLE', 0, 1);
+          else text57(cx - 2, cy - 3, String(e.k + 1), 0, 1);
+          resetClip();
+        }
+      } else if (e.type === 'sector' && age < 320) {
+        const k = tw(e.t0, 320, now, ease.outCubic), x = SECT_X[e.k];
+        setClip(x, 1, Math.round(14 * k), 10); fbDither(x + 1, 2, 12, 8, 0, 2); resetClip();
+      } else if (e.type === 'lap' && e.best && age < 2000) {
+        const y = 64, h = 16, inK = tw(e.t0, 250, now, ease.outCubic), outK = tw(e.t0 + 1600, 400, now, ease.inCubic);
+        const x0 = Math.round(-240 + 240 * inK + 240 * outK);
+        fbFill(x0, y, 240, h, 1); text57(x0 + 120 - (width57('BEST LAP', 2) >> 1), y + 1, 'BEST LAP', 0, 2);
+        drawSparkles(e, now, 120, 72, 30, 1400, 160);
+      }
+    }
+  }
+  function postFx(now) {                          // strobe + shake for a purple sector
+    let shake = 0, strobe = false;
+    for (const e of fx) if (e.type === 'purple') { const age = now - e.t0; if (age < 60 || (age >= 110 && age < 170)) strobe = true; if (age < 160) shake = ((age / 30) | 0) & 1 ? 1 : -1; }
+    if (strobe) for (let i = 0; i < fb.length; i++) fb[i] ^= 1;
+    return shake;
+  }
+
+  // ---- boot sequence ----
+  const ui = { mode: 'boot', bootT0: 0, rpmShown: 0 };
+  function renderBoot(now) {
+    const age = now - ui.bootT0;
+    const live = age >= 2300;
+    if (age >= 2200) {                                        // header bar wipes in from the left
+      const barW = Math.round(240 * ease.outCubic(clamp01((age - 2200) / 300)));
+      setClip(0, 0, barW, 12); drawHeader(now, { noLogo: age < 2400 }); resetClip();
+    }
+    if (age < 1900) {                                         // spin in with overshoot
+      const s = ease.outBack(clamp01(age / 950)) * 0.5, ang = (1 - ease.outCubic(clamp01(age / 950))) * -3 * Math.PI;
+      fbBlitXform(LOGO.hi, 120, 50, s, ang, 1);
+    } else if (age < 2400) {                                  // fly to the header corner, drawn as invert so it reads over the bar
+      const k = ease.inOutCubic(clamp01((age - 1900) / 500));
+      fbBlitXform(LOGO.hi, 120 + (15 - 120) * k, 50 + (5.5 - 50) * k, 0.5 + (0.108 - 0.5) * k, 0, 2);
+    }
+    if (age >= 950 && age < 2350) {                           // name types in, then wipes out
+      const n = Math.min(10, Math.floor((age - 950) / 45) + 1), name = 'PERCHWERKS'.slice(0, n);
+      const wipe = age > 2100 ? ease.inCubic(clamp01((age - 2100) / 250)) : 0;
+      setClip(60, 92, Math.round(120 * (1 - wipe)), 16); text57(60, 92, name, 1, 2);
+      if (n < 10 && ((age / 150) | 0) & 1) fbFill(60 + n * 12, 92, 10, 14, 1);
+      resetClip();
+    }
+    if (live) {
+      const kk = clamp01((age - 2300) / 800);
+      ui.rpmShown = kk < 0.5 ? 16000 * ease.inOutCubic(kk / 0.5) : 16000 + (sim.rpm - 16000) * ease.inOutCubic((kk - 0.5) / 0.5);
+      drawBigTime(now, fmtTime(sim.t * ease.outCubic(clamp01((age - 2300) / 600))));
+      drawRpm(now, ui.rpmShown);
+      drawSpeedDelta(now, ui.rpmShown);
+      drawStatus(now);
+      const dk = clamp01((age - 2600) / 500);
+      if (dk < 1) { dissolve(0, 62, 240, 20, dk, 11); dissolve(0, 112, 240, 16, dk, 29); }
+    }
+    if (age >= 3100) ui.mode = 'live';
+  }
+  function renderLive(now) {
+    ui.rpmShown += (sim.rpm - ui.rpmShown) * 0.5;
+    drawHeader(now); drawBigTime(now); drawSpeedDelta(now, ui.rpmShown); drawRpm(now, ui.rpmShown); drawStatus(now); drawFx(now);
+  }
+  function renderTest() {
+    fbClear(0);
+    for (let by = 0; by < 16; by++) for (let bx = 0; bx < 30; bx++) if ((bx + by) & 1) fbFill(bx * 8, by * 8, 8, 8, 1);
+    fbFill(56, 40, 128, 48, 0); fbRect(56, 40, 128, 48, 1); fbRect(0, 0, 240, 128, 1);
+    text57(120 - (width57('240 X 128', 2) >> 1), 50, '240 X 128', 1, 2);
+    text57(120 - (width57('0.35 MM PITCH', 1) >> 1), 72, '0.35 MM PITCH', 1);
+  }
+  let shakeNow = 0;
+  function renderFrame(now) {                     // one UI tick
+    fbClear(0);
+    if (ui.mode === 'boot') renderBoot(now); else renderLive(now);
+    shakeNow = postFx(now);
+    while (fx.length && now - fx[0].t0 > 2200) fx.shift();
+  }
+
+  // ---- fixed-step scheduler ----
+  const demo = { fps: 30, screen: 'live', uiNow: 0, acc: 0, lastReal: 0, fstn: true, frames: 0, renderMs: 0 };
+  function uiTick(stepMs) {
+    demo.uiNow += stepMs;
+    if (ui.mode === 'live') simStep(stepMs * sim.mul, demo.uiNow);
+    const t0 = performance.now();
+    renderFrame(demo.uiNow);
+    demo.renderMs = demo.renderMs * 0.9 + (performance.now() - t0) * 0.1; demo.frames++;
+  }
+  function reboot() { ui.mode = 'boot'; ui.bootT0 = demo.uiNow; ui.rpmShown = 0; fx.length = 0; }
+  reboot();
+
+  // ------------------------------------------------------------------
+  //  3D
+  // ------------------------------------------------------------------
+  if (typeof THREE === 'undefined') { document.getElementById('fallback').classList.add('show'); return; }
+  const css = name => getComputedStyle(document.documentElement).getPropertyValue(name).trim();
+  const canvas = document.getElementById('c'), viewer = document.getElementById('viewer'), hint = document.getElementById('hint');
+  const renderer = new THREE.WebGLRenderer({ canvas, antialias: true, alpha: false, powerPreference: 'high-performance' });
+  renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, 2));
+  const scene = new THREE.Scene();
+  const camera = new THREE.PerspectiveCamera(35, 1, 1, 3000);
+  scene.add(new THREE.HemisphereLight(0xffffff, 0x8a97a6, 0.95));
+  const key = new THREE.DirectionalLight(0xffffff, 0.75); key.position.set(60, 90, 140); scene.add(key);
+  const fill = new THREE.DirectionalLight(0xffffff, 0.35); fill.position.set(-90, -50, -80); scene.add(fill);
+
+  const mat = {
+    frame: new THREE.MeshStandardMaterial({ color: 0xe9e7e0, roughness: 0.85, metalness: 0 }),
+    lgp:   new THREE.MeshStandardMaterial({ color: 0xf5f7f3, roughness: 1, metalness: 0, emissive: 0xdde6dc, emissiveIntensity: 0.55 }),
+    glass: new THREE.MeshStandardMaterial({ color: 0x9cc2b2, transparent: true, opacity: 0.32, roughness: 0.2, metalness: 0, depthWrite: false }),
+    metal: new THREE.MeshStandardMaterial({ color: 0xd2d6da, roughness: 0.35, metalness: 0.55 }),
+    chip:  new THREE.MeshStandardMaterial({ color: 0x1b1f24, roughness: 0.5, metalness: 0.1 }),
+    tape:  new THREE.MeshStandardMaterial({ color: 0xf08a24, transparent: true, opacity: 0.85, roughness: 0.6 }),
+    edge:  new THREE.LineBasicMaterial({ color: 0x2b3a49, transparent: true, opacity: 0.55 }),
+    va:    new THREE.LineBasicMaterial({ color: 0x1f78c1 }),
+    aa:    new THREE.LineBasicMaterial({ color: 0xe0781f })
+  };
+
+  const edgeLines = [];
+  function box(x0, x1, y0, y1, z0, z1, m, edges) {
+    const g = new THREE.BoxGeometry(x1 - x0, y1 - y0, z1 - z0);
+    const mesh = new THREE.Mesh(g, m);
+    mesh.position.set((x0 + x1) / 2, (y0 + y1) / 2, (z0 + z1) / 2);
+    if (edges) { const l = new THREE.LineSegments(new THREE.EdgesGeometry(g, 20), mat.edge); mesh.add(l); edgeLines.push(l); }
+    return mesh;
+  }
+
+  const model = new THREE.Group();
+  model.position.set(-P.lb_w / 2, -P.lb_h / 2, 0);   // outline centre at the origin
+  scene.add(model);
+  const G = { frame: new THREE.Group(), glass: new THREE.Group(), pins: new THREE.Group(), led: new THREE.Group(), pegs: new THREE.Group(), chip: new THREE.Group(), tape: new THREE.Group(), outlines: new THREE.Group() };
+  const moving = { frame: new THREE.Group(), rear: new THREE.Group() };   // exploded-view carriers
+  model.add(moving.frame, moving.rear, G.glass, G.chip, G.tape, G.outlines);
+  moving.frame.add(G.frame); moving.rear.add(G.pins, G.led, G.pegs);
+
+  // ---- frame (cradle) ----
+  {
+    const w = P.frame_wall, T = -D.total_t, ny1 = P.lb_h - P.notch_top, ny0 = ny1 - P.notch_len;
+    G.frame.add(box(w, P.lb_w - w, D.lcd_y0, P.lb_h - w, T, -P.lcd_t, mat.frame, false));       // back plate
+    for (const x0 of [0, P.lb_w - w]) {                                                        // side walls with notch
+      G.frame.add(box(x0, x0 + w, D.lcd_y0, ny0, T, 0, mat.frame, true));
+      G.frame.add(box(x0, x0 + w, ny0, ny1, T, -P.notch_depth, mat.frame, true));
+      G.frame.add(box(x0, x0 + w, ny1, P.lb_h, T, 0, mat.frame, true));
+    }
+    G.frame.add(box(w, P.lb_w - w, P.lb_h - w, P.lb_h, T, 0, mat.frame, true));                 // top wall
+    for (const x0 of [0, P.lb_w - P.foot_w]) G.frame.add(box(x0, x0 + P.foot_w, 0, P.foot_h, T, 0, mat.frame, true)); // end caps
+    const lgp = new THREE.Mesh(new THREE.PlaneGeometry(P.lcd_w, P.lcd_h - P.ledge_h), mat.lgp);   // light guide face
+    lgp.position.set(P.lb_w / 2, D.lcd_y0 + P.ledge_h + (P.lcd_h - P.ledge_h) / 2, -P.lcd_t + 0.02);
+    G.frame.add(lgp);
+    const backEdge = box(0, P.lb_w, D.lcd_y0, P.lb_h, T, T + 0.001, mat.frame, true); backEdge.material = new THREE.MeshBasicMaterial({ visible: false }); G.frame.add(backEdge);
+  }
+
+  // ---- glass + screen layers ----
+  const LCD = { bgOn: [0xe4, 0xea, 0xdf], bgOff: [0xc6, 0xcd, 0xc0], dark: [0x1a, 0x21, 0x24] };
+  const TEXW = 256;                                       // power of two, 240 used
+  const dotData = new Uint8Array(TEXW * SH * 4);
+  const dotTex = new THREE.DataTexture(dotData, TEXW, SH, THREE.RGBAFormat);
+  dotTex.magFilter = THREE.NearestFilter; dotTex.minFilter = THREE.LinearMipmapLinearFilter; dotTex.generateMipmaps = true;
+  dotTex.anisotropy = renderer.capabilities.getMaxAnisotropy(); dotTex.repeat.set(SW / TEXW, 1); dotTex.wrapS = THREE.ClampToEdgeWrapping;
+  const vaPlane = new THREE.Mesh(new THREE.PlaneGeometry(P.va_w, P.va_h), new THREE.MeshBasicMaterial({ color: 0xe4eadf }));
+  const aaPlane = new THREE.Mesh(new THREE.PlaneGeometry(P.aa_w, P.aa_h), new THREE.MeshBasicMaterial({ map: dotTex }));
+  const gapCanvas = document.createElement('canvas'); gapCanvas.width = gapCanvas.height = 32;
+  const gapTex = new THREE.CanvasTexture(gapCanvas); gapTex.wrapS = gapTex.wrapT = THREE.RepeatWrapping; gapTex.repeat.set(SW, SH); gapTex.anisotropy = dotTex.anisotropy;
+  const gapPlane = new THREE.Mesh(new THREE.PlaneGeometry(P.aa_w, P.aa_h), new THREE.MeshBasicMaterial({ map: gapTex, transparent: true, depthWrite: false }));
+  {
+    G.glass.add(box(D.lcd_x0, D.lcd_x0 + P.lcd_w, D.lcd_y0, D.lcd_y0 + P.lcd_h, -P.lcd_t, D.ledge_z, mat.glass, true));                    // rear plate
+    G.glass.add(box(D.lcd_x0, D.lcd_x0 + P.lcd_w, D.lcd_y0 + P.ledge_h, D.lcd_y0 + P.lcd_h, D.ledge_z, 0, mat.glass, true));               // front plate
+    vaPlane.position.set(P.va_x0 + P.va_w / 2, D.va_y0 + P.va_h / 2, 0.015);
+    aaPlane.position.set(D.aa_cx, D.aa_cy, 0.02);
+    gapPlane.position.set(D.aa_cx, D.aa_cy, 0.025);
+    G.glass.add(vaPlane, aaPlane, gapPlane);
+  }
+  function lcdBg() { return demoOpts.backlight ? LCD.bgOn : LCD.bgOff; }
+  function paintGapTile() {
+    const g = gapCanvas.getContext('2d'), bg = lcdBg();
+    g.clearRect(0, 0, 32, 32); g.fillStyle = `rgb(${bg[0]},${bg[1]},${bg[2]})`; g.fillRect(30, 0, 2, 32); g.fillRect(0, 30, 32, 2);
+    gapTex.needsUpdate = true; vaPlane.material.color.setRGB(bg[0] / 255, bg[1] / 255, bg[2] / 255);
+  }
+  // ---- outlines + labels ----
+  function loop(x0, y0, w, h, z, m) {
+    const pts = [new THREE.Vector3(x0, y0, z), new THREE.Vector3(x0 + w, y0, z), new THREE.Vector3(x0 + w, y0 + h, z), new THREE.Vector3(x0, y0 + h, z)];
+    return new THREE.LineLoop(new THREE.BufferGeometry().setFromPoints(pts), m);
+  }
+  function label(text, color) {
+    const c = document.createElement('canvas'); c.width = 512; c.height = 96; const g = c.getContext('2d');
+    g.font = '600 44px "IBM Plex Mono", Menlo, monospace'; g.textBaseline = 'middle';
+    g.fillStyle = 'rgba(255,255,255,0.82)'; const tw2 = g.measureText(text).width + 36;
+    g.beginPath(); g.roundRect ? g.roundRect(4, 8, tw2, 80, 14) : g.rect(4, 8, tw2, 80); g.fill();
+    g.fillStyle = color; g.fillText(text, 22, 48);
+    const t = new THREE.CanvasTexture(c); t.minFilter = THREE.LinearFilter;
+    const s = new THREE.Sprite(new THREE.SpriteMaterial({ map: t, transparent: true, depthTest: false }));
+    s.scale.set(26, 26 * 96 / 512, 1); s.center.set(0, 0.5);
+    return s;
+  }
+  G.outlines.add(loop(P.va_x0, D.va_y0, P.va_w, P.va_h, 0.08, mat.va));
+  G.outlines.add(loop(P.aa_x0, D.aa_y0, P.aa_w, P.aa_h, 0.08, mat.aa));
+  const labels = new THREE.Group(); G.outlines.add(labels);
+  function buildLabels() {
+    while (labels.children.length) { const s = labels.children.pop(); s.material.map.dispose(); s.material.dispose(); }
+    const lv = label(`VA ${f(P.va_w,1)} × ${f(P.va_h,1)}`, '#1f78c1'); lv.position.set(P.va_x0 + 0.4, D.va_y0 + P.va_h - 2.4, 0.2); labels.add(lv);
+    const la = label(`AA ${P.aa_w} × ${P.aa_h}`, '#e0781f'); la.position.set(P.aa_x0 + 0.4, D.aa_y0 + 2.4, 0.2); labels.add(la);
+  }
+  buildLabels();
+  G.outlines.visible = false;
+  // ---- chip, tape ----
+  G.chip.add(box(P.lb_w / 2 - P.chip_w / 2, P.lb_w / 2 + P.chip_w / 2, P.chip_y - P.chip_h / 2, P.chip_y + P.chip_h / 2, D.ledge_z, D.ledge_z + P.chip_t, mat.chip, true));
+  G.tape.add(box(P.lb_w + P.tape_overhang - P.tape_len, P.lb_w + P.tape_overhang, P.lb_h - D.lcd_y0 - P.tape_h, P.lb_h - D.lcd_y0, 0.03, 0.03 + P.tape_t, mat.tape, true));
+  // ---- pins ----
+  for (let n = 1; n <= P.n_pins; n++) {
+    const x = pinX(n);
+    G.pins.add(box(x - P.pin_w / 2, x + P.pin_w / 2, D.lcd_y0, D.lcd_y0 + P.pin_tab_h, D.ledge_z, D.ledge_z + P.pin_t, mat.metal, false));
+    G.pins.add(box(x - P.pin_w / 2, x + P.pin_w / 2, P.pin_y - P.pin_t / 2, P.pin_y + P.pin_t / 2, D.pin_tip_z, D.ledge_z + P.pin_t, mat.metal, false));
+  }
+  for (const x of [P.led_a_x, P.led_k_x])
+    G.led.add(box(x - P.led_pin_w / 2, x + P.led_pin_w / 2, P.led_pin_y - P.led_pin_t / 2, P.led_pin_y + P.led_pin_t / 2, D.led_tip_z, -D.total_t + 0.05, mat.metal, false));
+  for (const x of [P.peg_x, P.lb_w - P.peg_x]) {
+    const cyl = new THREE.Mesh(new THREE.CylinderGeometry(P.peg_d / 2, P.peg_d / 2 - 0.15, P.peg_len + 0.05, 24), mat.frame);
+    cyl.rotation.x = Math.PI / 2; cyl.position.set(x, P.peg_y, -D.total_t - P.peg_len / 2 + 0.025); G.pegs.add(cyl);
+  }
+
+  // ---- grid (rebuilt on theme change so its colours follow the tokens) ----
+  let grid = null;
+  function makeGrid() {
+    const vis = grid ? grid.visible : true;
+    if (grid) { scene.remove(grid); grid.geometry.dispose(); grid.material.dispose(); }
+    grid = new THREE.GridHelper(200, 20, new THREE.Color(css('--grid2')), new THREE.Color(css('--grid')));
+    grid.rotation.x = Math.PI / 2; grid.position.z = D.pin_tip_z - 0.5; grid.visible = vis; scene.add(grid);
+  }
+
+  // ------------------------------------------------------------------
+  //  LCD physics → texture. The LC state of every dot moves toward the
+  //  framebuffer value with an FSTN-like time constant.
+  // ------------------------------------------------------------------
+  const lc = new Float32Array(SW * SH);
+  const flatCanvas = document.getElementById('flat'), flatCtx = flatCanvas.getContext('2d'), flatImg = flatCtx.createImageData(SW, SH);
+  const demoOpts = { backlight: true, flat: false };
+  function updateLcd(dtMs) {
+    const bg = lcdBg(), dk = LCD.dark, fd = flatImg.data;
+    const aR = demo.fstn ? 1 - Math.exp(-dtMs / 110) : 1, aF = demo.fstn ? 1 - Math.exp(-dtMs / 170) : 1;
+    const dx = shakeNow, dy = shakeNow ? (shakeNow > 0 ? -1 : 1) : 0;
+    for (let y = 0; y < SH; y++) {
+      const sy = Math.min(SH - 1, Math.max(0, y - dy)), trow = (SH - 1 - y) * TEXW * 4, frow = y * SW * 4;
+      for (let x = 0; x < SW; x++) {
+        const sx = Math.min(SW - 1, Math.max(0, x - dx)), i = y * SW + x, target = fb[sy * SW + sx];
+        const v = lc[i] + (target - lc[i]) * (target > lc[i] ? aR : aF); lc[i] = v;
+        const r = bg[0] + (dk[0] - bg[0]) * v, g = bg[1] + (dk[1] - bg[1]) * v, b = bg[2] + (dk[2] - bg[2]) * v;
+        let o = trow + x * 4; dotData[o] = r; dotData[o + 1] = g; dotData[o + 2] = b; dotData[o + 3] = 255;
+        if (demoOpts.flat) { o = frow + x * 4; fd[o] = r; fd[o + 1] = g; fd[o + 2] = b; fd[o + 3] = 255; }
+      }
+    }
+    dotTex.needsUpdate = true;
+    if (demoOpts.flat) flatCtx.putImageData(flatImg, 0, 0);
+  }
+  paintGapTile();
+
+  // ------------------------------------------------------------------
+  //  Camera / orbit (touch: one finger orbits, two fingers zoom + pan)
+  // ------------------------------------------------------------------
+  const VIEWS = {
+    iso:    { theta: Math.PI / 2 - 0.85, phi: Math.PI / 2 - 0.55, sway: Math.PI / 2 - 0.25 },
+    front:  { theta: Math.PI / 2, phi: Math.PI / 2 },
+    back:   { theta: -Math.PI / 2, phi: Math.PI / 2 },
+    pins:   { theta: -Math.PI / 2 + 0.75, phi: Math.PI / 2 + 0.62 }
+  };
+  const orb = { theta: VIEWS.iso.theta, phi: VIEWS.iso.phi, r: 300, target: new THREE.Vector3(0, 0, -3) };
+  const goal = { theta: orb.theta, phi: orb.phi, r: orb.r, target: orb.target.clone() };
+  const R_MODEL = Math.hypot(P.lb_w / 2 + 4, P.lb_h / 2 + 2, 6);
+  function fitRadius() {
+    const a = camera.aspect, v = THREE.MathUtils.degToRad(camera.fov / 2), h = Math.atan(Math.tan(v) * a);
+    return R_MODEL / Math.sin(Math.min(v, h)) * 0.88;
+  }
+  let currentView = 'iso';
+  const camBase = { theta: VIEWS.iso.theta, phi: VIEWS.iso.phi };   // pose the sway oscillates around
+  let swayT = 0;
+  function setView(name, snap) {
+    document.querySelectorAll('#views .chip').forEach(b => b.setAttribute('aria-pressed', String(b.dataset.view === name)));
+    if (name === 'flat') { demoOpts.flat = true; document.getElementById('flatwrap').hidden = false; canvas.hidden = true; hint.classList.add('gone'); currentView = name; return; }
+    demoOpts.flat = false; document.getElementById('flatwrap').hidden = true; canvas.hidden = false; currentView = name;
+    const vw = VIEWS[name]; goal.theta = vw.theta; goal.phi = vw.phi; goal.r = fitRadius(); goal.target.set(0, 0, -3);
+    camBase.theta = vw.sway !== undefined ? vw.sway : vw.theta; camBase.phi = vw.phi; swayT = 0;
+    if (snap) { orb.theta = goal.theta; orb.phi = goal.phi; orb.r = goal.r; orb.target.copy(goal.target); }
+  }
+  function resize() {
+    const w = viewer.clientWidth, h = viewer.clientHeight; if (!w || !h) return;
+    renderer.setSize(w, h, false); camera.aspect = w / h; camera.updateProjectionMatrix();
+  }
+  new ResizeObserver(() => { resize(); goal.r = Math.min(goal.r, fitRadius() * 1.6); }).observe(viewer);
+  resize(); setView('iso', true);
+
+  const pointers = new Map(); let pinch = null;
+  function userTouched() { if (state.cam !== 'still') setCam('still'); hint.classList.add('gone'); }
+  canvas.addEventListener('pointerdown', e => {
+    canvas.setPointerCapture(e.pointerId); pointers.set(e.pointerId, { x: e.clientX, y: e.clientY }); userTouched();
+    try { canvas.focus({ preventScroll: true }); } catch (err) {}
+    if (pointers.size === 2) { const [a, b] = [...pointers.values()]; pinch = { d: Math.hypot(a.x - b.x, a.y - b.y), x: (a.x + b.x) / 2, y: (a.y + b.y) / 2 }; }
+    e.preventDefault();
+  });
+  canvas.addEventListener('pointermove', e => {
+    if (!pointers.has(e.pointerId)) return;
+    const prev = pointers.get(e.pointerId); pointers.set(e.pointerId, { x: e.clientX, y: e.clientY });
+    if (pointers.size === 1) {
+      const k = 2 * Math.PI / Math.max(viewer.clientHeight, 200);
+      goal.theta += (e.clientX - prev.x) * k * 0.9; goal.phi -= (e.clientY - prev.y) * k * 0.9;
+      goal.phi = Math.min(Math.PI - 0.03, Math.max(0.03, goal.phi));
+    } else if (pointers.size === 2 && pinch) {
+      const [a, b] = [...pointers.values()]; const d = Math.hypot(a.x - b.x, a.y - b.y), mx = (a.x + b.x) / 2, my = (a.y + b.y) / 2;
+      if (d > 0 && pinch.d > 0) goal.r = Math.min(1500, Math.max(40, goal.r * pinch.d / d));
+      pan(mx - pinch.x, my - pinch.y); pinch = { d, x: mx, y: my };
+    }
+  });
+  const endPointer = e => { pointers.delete(e.pointerId); if (pointers.size < 2) pinch = null; };
+  canvas.addEventListener('pointerup', endPointer); canvas.addEventListener('pointercancel', endPointer);
+  canvas.addEventListener('wheel', e => { e.preventDefault(); userTouched(); goal.r = Math.min(1500, Math.max(40, goal.r * Math.exp(e.deltaY * 0.0012))); }, { passive: false });
+  canvas.addEventListener('contextmenu', e => e.preventDefault());
+  function pan(dx, dy) {
+    const perPx = 2 * goal.r * Math.tan(THREE.MathUtils.degToRad(camera.fov / 2)) / Math.max(viewer.clientHeight, 200);
+    const right = new THREE.Vector3(), up = new THREE.Vector3(); camera.matrix.extractBasis(right, up, new THREE.Vector3());
+    goal.target.addScaledVector(right, -dx * perPx).addScaledVector(up, dy * perPx);
+  }
+  window.addEventListener('keydown', e => {
+    if (document.activeElement !== canvas) return;
+    const step = 0.08; if (e.key === 'ArrowLeft') goal.theta -= step; else if (e.key === 'ArrowRight') goal.theta += step;
+    else if (e.key === 'ArrowUp') goal.phi = Math.max(0.03, goal.phi - step); else if (e.key === 'ArrowDown') goal.phi = Math.min(Math.PI - 0.03, goal.phi + step); else return;
+    e.preventDefault(); userTouched();
+  });
+  canvas.tabIndex = 0;
+
+  // ------------------------------------------------------------------
+  //  UI wiring
+  // ------------------------------------------------------------------
+  const state = { cam: 'sway' };                  // 'sway' rocks in front of the screen, 'spin' orbits, 'still' holds
+  function setCam(mode) {
+    if (mode === 'sway' && state.cam !== 'sway') { camBase.theta = goal.theta; camBase.phi = goal.phi; swayT = 0; }
+    state.cam = mode;
+    document.querySelectorAll('#cam .chip').forEach(b => b.setAttribute('aria-pressed', String(b.dataset.cam === mode)));
+  }
+  document.getElementById('views').addEventListener('click', e => { const b = e.target.closest('[data-view]'); if (b) setView(b.dataset.view, false); });
+  document.getElementById('cam').addEventListener('click', e => { const b = e.target.closest('[data-cam]'); if (b) { setCam(b.dataset.cam); hint.classList.add('gone'); } });
+  const explode = document.getElementById('explode'), explodeVal = document.getElementById('explodeVal');
+  explode.addEventListener('input', () => { const v = parseFloat(explode.value); explodeVal.textContent = `${v} mm`; moving.frame.position.z = -v; moving.rear.position.z = -2 * v; });
+  document.querySelectorAll('#parts input').forEach(cb => cb.addEventListener('change', () => { G[cb.dataset.part].visible = cb.checked; cb.parentElement.classList.toggle('on', cb.checked); }));
+  document.querySelectorAll('#opts input').forEach(cb => cb.addEventListener('change', () => {
+    cb.parentElement.classList.toggle('on', cb.checked); const o = cb.dataset.opt;
+    if (o === 'outlines') G.outlines.visible = cb.checked;
+    else if (o === 'edges') edgeLines.forEach(l => l.visible = cb.checked);
+    else if (o === 'grid') grid.visible = cb.checked;
+    else if (o === 'backlight') { demoOpts.backlight = cb.checked; mat.lgp.emissiveIntensity = cb.checked ? 0.55 : 0; paintGapTile(); }
+  }));
+  document.getElementById('screens').addEventListener('click', e => {
+    const b = e.target.closest('[data-screen]'); if (!b) return; demo.screen = b.dataset.screen;
+    document.querySelectorAll('#screens .chip').forEach(x => x.setAttribute('aria-pressed', String(x === b)));
+    if (demo.screen === 'test') renderTest(); else if (demo.screen === 'blank') fbClear(0);
+  });
+  document.getElementById('demo').addEventListener('click', e => {
+    const b = e.target.closest('[data-act]'); if (!b) return;
+    if (demo.screen !== 'live') { demo.screen = 'live'; document.querySelectorAll('#screens .chip').forEach(x => x.setAttribute('aria-pressed', String(x.dataset.screen === 'live'))); }
+    const now = demo.uiNow;
+    if (b.dataset.act === 'reboot') reboot();
+    else if (b.dataset.act === 'lap' && ui.mode === 'live') {           // jump to the end of the planned lap
+      while (sim.sectorIdx < 2) { sim.t = sim.sectorEnds[sim.sectorIdx]; endSector(now, 'normal'); }
+      sim.t = sim.sectorEnds[2] + (sim.rng() - 0.5) * 800; endSector(now, 'auto'); endLap(now);
+    }
+    else if (b.dataset.act === 'purple' && ui.mode === 'live') { const k = sim.sectorIdx; endSector(now, 'purple'); if (k === 2) endLap(now); }
+  });
+  const autoRun = document.getElementById('autoRun');
+  autoRun.addEventListener('change', () => { sim.auto = autoRun.checked; sim.mul = autoRun.checked ? 4 : 1; autoRun.parentElement.classList.toggle('on', autoRun.checked); });
+  document.getElementById('rate').addEventListener('click', e => {
+    const b = e.target.closest('[data-fps]'); if (!b) return; demo.fps = parseInt(b.dataset.fps, 10);
+    document.querySelectorAll('#rate [data-fps]').forEach(x => x.setAttribute('aria-pressed', String(x === b)));
+  });
+  const fstnCb = document.getElementById('fstn');
+  fstnCb.addEventListener('change', () => { demo.fstn = fstnCb.checked; fstnCb.parentElement.classList.toggle('on', fstnCb.checked); });
+  const statEl = document.getElementById('stat');
+
+  // ------------------------------------------------------------------
+  //  Theme
+  // ------------------------------------------------------------------
+  function applyTheme() {
+    renderer.setClearColor(new THREE.Color(css('--bg3d')));
+    makeGrid();
+    mat.edge.color.set(css('--edge')); mat.va.color.set(css('--va')); mat.aa.color.set(css('--aa'));
+  }
+  applyTheme();
+  const mq = window.matchMedia('(prefers-color-scheme: dark)'); if (mq.addEventListener) mq.addEventListener('change', applyTheme);
+  new MutationObserver(applyTheme).observe(document.documentElement, { attributes: true, attributeFilter: ['data-theme'] });
+
+  // ------------------------------------------------------------------
+  //  Loop: UI ticks at a fixed step, LCD physics + 3D at display rate
+  // ------------------------------------------------------------------
+  const reduce = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+  if (reduce) setCam('still');
+  let running = true, lastT = 0, statT = 0;
+  document.addEventListener('visibilitychange', () => { running = !document.hidden; if (running) { lastT = 0; requestAnimationFrame(frame); } });
+  function frame(t) {
+    if (!running) return;
+    const dt = lastT ? Math.min(250, t - lastT) : 16; lastT = t;
+    if (demo.screen === 'live') {
+      const step = 1000 / demo.fps; demo.acc += dt;
+      let n = 0; while (demo.acc >= step && n < 8) { uiTick(step); demo.acc -= step; n++; }
+      if (n === 8) demo.acc = 0;
+    }
+    updateLcd(dt);
+    if (t - statT > 500) { statT = t; statEl.textContent = `${demo.fps} Hz · draw ${demo.renderMs.toFixed(2)} ms`; }
+    if (!demoOpts.flat) {
+      if (state.cam === 'spin') goal.theta += 0.0035;
+      else if (state.cam === 'sway') {                 // slow figure-of-eight around the base pose, never past ±0.7 rad of it
+        swayT += dt; const a = swayT / 1000;
+        goal.theta = camBase.theta + 0.62 * Math.sin(a * 0.55);
+        goal.phi = Math.min(Math.PI - 0.03, Math.max(0.03, camBase.phi + 0.11 * Math.sin(a * 1.1 + 0.9)));
+      }
+      const k = reduce ? 1 : 0.14;
+      orb.theta += (goal.theta - orb.theta) * k; orb.phi += (goal.phi - orb.phi) * k; orb.r += (goal.r - orb.r) * k; orb.target.lerp(goal.target, k);
+      const sp = Math.sin(orb.phi);
+      camera.position.set(orb.target.x + orb.r * sp * Math.cos(orb.theta), orb.target.y + orb.r * Math.cos(orb.phi), orb.target.z + orb.r * sp * Math.sin(orb.theta));
+      camera.up.set(0, 1, 0); camera.lookAt(orb.target);
+      renderer.render(scene, camera);
+    }
+    requestAnimationFrame(frame);
+  }
+  requestAnimationFrame(frame);
+})();
+</script>
+
+</body>
+</html>
