@@ -66,11 +66,33 @@ version will be, with no browser APIs beyond `Math`:
   Every animation takes `now` in ms; nothing counts frames.
 - **Session sim** `sim` + `simStep`: a direct-drive kart lap with corners, three sectors,
   session bests, delta vs best. `endSector` / `endLap` push events into `fx`.
-- **Screen**: `drawHeader`, `drawBigTime`, `drawSpeedDelta`, `drawRpm`, `drawStatus`,
-  `drawFx` (purple badge + sparkles, sector fill, best-lap banner), `postFx` (strobe,
-  shake), `renderBoot` (spin-in, name, fly-to-header, gauge sweep, dissolve).
+- **Theme A "Timekeeper"**: `drawHeader`, `drawBigTime`, `drawSpeedDelta`, `drawRpm`,
+  `drawStatus`, `drawFxA` (purple badge + sparkles, sector fill, best-lap banner),
+  `postFxA` (strobe, shake), `renderBootA` (spin-in, name, fly-to-header, gauge sweep,
+  dissolve).
+- **Theme B "Pace"**: `drawLadder` (32-block RPM ladder with shift zone + peak),
+  `drawGiantRpm`, `thermo`/`drawVitals` (EGT and water thermometers with target band,
+  peak, over-temp blink), `drawPaceRow` (delta + trend + bar + speed), `drawLapStrip`,
+  `drawIconRow` (8 × 8 `ICON` set + `battery`), `drawChip`, `drawFxB` (chips over the
+  ladder, diagonal sweep, rings, checkered-flag wave, best-lap slam), `postFxB`
+  (`glitchRows`), `renderBootB` (particle swarm, bouncing letters, `squeezeY` CRT
+  collapse/expand, ladder self-test, slot-machine digits).
+- `window.perchDemo` exposes `sim`, `fx`, `ui`, `fb` and the event functions for poking
+  from the console (`perchDemo.sim.bestLap = 70000` then press Lap forces a best lap).
 - **Scheduler**: `uiTick(step)` is called a fixed number of times per second from the
   page loop; `updateLcd` then models the FSTN response per displayed frame.
+- **Panel model** (`PANEL`, `panelTau`, `buildLut`, `updateLcd`): each dot is a first-order
+  lag toward the framebuffer value, integrated exactly per displayed frame
+  (`a = 1 − exp(−dt/τ)`). τ comes from the WO240128A-TFH datasheet's Tr 200 / Tf 250 ms
+  typical (10–90 %, 25 °C) via τ = T / ln 9, scaled with temperature by an Arrhenius law
+  (Ea/R = 3600 K, a textbook estimate, not a Winstar figure). Transmittance maps to colour
+  through a 256-entry LUT mixed in linear light; "5:1 contrast" sets the dark state to the
+  background at 1/CR luminance (datasheet CR 5 typ). Known simplifications: no dead time
+  or S-curve in the optical response, no SPI / 64 Hz scan latency, uniform temperature
+  across the panel. Fit τ on the bench with a photodiode or 240 fps phone video of a
+  blinking block and replace the two constants.
+- **The stat** is JavaScript time on the viewing device for the raster (`renderFrame`)
+  and for the panel simulation; neither is a prediction for the nRF54.
 
 To port: keep the primitives' signatures, swap the row-major buffer for the UC1608 page
 layout inside `fbFill`/`fbPx`, and emit `F57` and `LOGO_SRC` as `const uint8_t[]`.

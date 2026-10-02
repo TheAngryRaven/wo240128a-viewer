@@ -16,6 +16,7 @@
 }
 @media (prefers-color-scheme: dark){
   :root:not([data-theme="light"]){
+    /* PerchWerks dark */
     --bg:#1d0924; --surface:#24102b; --fg:#f6f1fa; --muted:#a08fad; --line:#372444;
     --accent:#9e89c4; --accent-ink:#1d0924; --chip:#2c1735; --chip-on:#2e1b3d;
     --va:#5aa9ec; --aa:#f0954a; --bg3d:#16021d; --grid:#2e1b3d; --grid2:#40294f; --edge:#0b0010;
@@ -24,6 +25,7 @@
   }
 }
 :root[data-theme="dark"]{
+  /* PerchWerks dark */
   --bg:#1d0924; --surface:#24102b; --fg:#f6f1fa; --muted:#a08fad; --line:#372444;
   --accent:#9e89c4; --accent-ink:#1d0924; --chip:#2c1735; --chip-on:#2e1b3d;
   --va:#5aa9ec; --aa:#f0954a; --bg3d:#16021d; --grid:#2e1b3d; --grid2:#40294f; --edge:#0b0010;
@@ -51,6 +53,17 @@ h1 small{font-family:var(--font-body);font-weight:400;font-size:.5em;color:var(-
 .ov-br{bottom:10px;right:10px}
 .ov-bl{bottom:16px;left:12px;right:200px;font-size:12px;color:var(--muted);transition:opacity .6s;font-family:var(--font-mono)}
 .ov-bl.gone{opacity:0}
+.ov-tr{top:48px;right:12px;font-size:12px;color:var(--muted);font-family:var(--font-mono);font-variant-numeric:tabular-nums;text-align:right;white-space:nowrap}
+.ov-tr b{color:var(--fg);font-weight:500}
+.wheelui{position:absolute;left:12px;right:12px;bottom:12px;display:flex;flex-direction:column;gap:8px;align-items:flex-start}
+.wheelread{font-family:var(--font-mono);font-size:15px;font-variant-numeric:tabular-nums;color:var(--fg);background:var(--surface);border:1px solid var(--line);border-radius:8px;padding:6px 10px}
+.wheelread b{font-weight:500}
+.wheelread.good{border-color:var(--ok)} .wheelread.bad{border-color:var(--aa)}
+.wheelbtns{display:flex;gap:6px;flex-wrap:wrap}
+.chip:disabled{opacity:.5;cursor:default}
+.wheelhint{font-size:12px;color:var(--muted);max-width:60ch}
+.viewer.wheel .flatwrap{padding:52px 12px 150px}
+.viewer.wheel #cam{display:none}
 .fallback{position:absolute;inset:0;display:none;place-items:center;padding:24px;text-align:center;color:var(--muted)}
 .fallback.show{display:grid}
 
@@ -66,9 +79,9 @@ h1 small{font-family:var(--font-body);font-weight:400;font-size:.5em;color:var(-
 .panel{background:var(--surface);border:1px solid var(--line);border-radius:8px;padding:14px 16px;display:flex;flex-direction:column;gap:14px}
 .row{display:flex;flex-wrap:wrap;gap:8px;align-items:center}
 .row .lbl{font-size:12px;letter-spacing:.08em;text-transform:uppercase;color:var(--muted);font-weight:500;min-width:76px}
-.slider{display:flex;align-items:center;gap:12px;flex:1;min-width:0}
+.slider{display:flex;align-items:center;gap:12px;flex:1 1 240px;min-width:0}
 input[type=range]{flex:1;min-width:120px;accent-color:var(--accent)}
-.val{font-family:var(--font-mono);font-variant-numeric:tabular-nums;font-size:13px;min-width:5ch;text-align:right;color:var(--fg)}
+.val{font-family:var(--font-mono);font-variant-numeric:tabular-nums;font-size:13px;min-width:5ch;text-align:right;color:var(--fg);white-space:nowrap}
 .stat{font-family:var(--font-mono);font-size:12px;color:var(--muted);font-variant-numeric:tabular-nums}
 
 h2{font-family:var(--font-display);font-weight:700;font-size:20px;margin:0 0 2px;letter-spacing:-.005em}
@@ -151,7 +164,9 @@ h1{border-left:4px solid var(--accent);padding-left:12px}
       <button class="chip" data-view="front" aria-pressed="false">Front</button>
       <button class="chip" data-view="back" aria-pressed="false">Back</button>
       <button class="chip" data-view="pins" aria-pressed="false">Pins</button>
+      <button class="chip" data-view="driver" aria-pressed="false">Driver</button>
       <button class="chip" data-view="flat" aria-pressed="false">Flat</button>
+      <button class="chip" data-view="wheel" aria-pressed="false">Wheel</button>
     </div>
     <div class="overlay ov-br" id="cam">
       <button class="chip" data-cam="sway" aria-pressed="true">Sway</button>
@@ -159,15 +174,31 @@ h1{border-left:4px solid var(--accent);padding-left:12px}
       <button class="chip" data-cam="still" aria-pressed="false">Still</button>
     </div>
     <div class="overlay ov-bl" id="hint">drag · pinch to zoom</div>
+    <div class="overlay ov-tr" id="angle"></div>
+    <div class="wheelui" id="wheelui" hidden>
+      <div class="wheelread" id="wheelread">Gyro off</div>
+      <div class="wheelbtns">
+        <button class="chip" id="gyroBtn">Start gyro</button>
+        <button class="chip" id="eyeBtn" disabled>Eye here</button>
+      </div>
+      <div class="wheelhint" id="wheelhint">Hold the phone square to your face, tap Eye here, then lay it on the wheel where the dash goes.</div>
+    </div>
     <div class="fallback" id="fallback">The 3D library did not load. Check the connection and reload the page.</div>
   </div>
 
   <div class="panel">
+    <div class="row" id="themes">
+      <span class="lbl">Theme</span>
+      <button class="chip" data-theme="B" aria-pressed="true">Pace</button>
+      <button class="chip" data-theme="A" aria-pressed="false">Timekeeper</button>
+    </div>
     <div class="row" id="demo">
       <span class="lbl">Demo</span>
       <button class="chip act" data-act="reboot">Reboot</button>
       <button class="chip act" data-act="lap">Lap</button>
+      <button class="chip act" data-act="bestlap">Best lap</button>
       <button class="chip act" data-act="purple">Purple sector</button>
+      <button class="chip act" data-act="overheat">Overheat</button>
       <label class="chip on"><input type="checkbox" id="autoRun" checked><span class="sw"></span>Session ×4</label>
     </div>
     <div class="row" id="rate">
@@ -176,9 +207,18 @@ h1{border-left:4px solid var(--accent);padding-left:12px}
       <button class="chip" data-fps="20" aria-pressed="false">20</button>
       <button class="chip" data-fps="30" aria-pressed="true">30</button>
       <button class="chip" data-fps="60" aria-pressed="false">60 fps</button>
-      <span class="sep"></span>
-      <label class="chip on"><input type="checkbox" id="fstn" checked><span class="sw"></span>FSTN response</label>
       <span class="stat" id="stat"></span>
+    </div>
+    <div class="row" id="panelrow">
+      <span class="lbl">Panel</span>
+      <label class="chip on"><input type="checkbox" id="fstn" checked><span class="sw"></span>FSTN response</label>
+      <label class="chip"><input type="checkbox" id="cr5"><span class="sw"></span>5:1 contrast</label>
+      <label class="chip on"><input type="checkbox" id="vangle" checked><span class="sw"></span>Viewing angle</label>
+      <label class="chip"><input type="checkbox" id="flip"><span class="sw"></span>Mount 6 o'clock up</label>
+      <div class="slider">
+        <input type="range" id="temp" min="-20" max="70" step="1" value="25" aria-label="Panel temperature in degrees Celsius">
+        <span class="val" id="tempVal"></span>
+      </div>
     </div>
     <div class="row" id="screens">
       <span class="lbl">Screen</span>
@@ -218,8 +258,13 @@ h1{border-left:4px solid var(--accent);padding-left:12px}
   <section class="panel note">
     <h2>What the demo is running</h2>
     <p>The screen is a hand-rolled 1-bit renderer, no library: a 240 × 128 framebuffer with clip rectangle, fill / rect / invert / dither primitives, a 5 × 7 bitmap font, a parametric seven-segment font drawn from rectangles at any height, and a transform blit (scale + rotate by inverse mapping) used for the logo. Every animation is a tween in milliseconds, so the UI tick rate only changes smoothness, never timing. The loop is fixed-step: pick a rate above and the renderer runs exactly that many ticks per second. Written as the C it will become, with integer pixel math.</p>
-    <p><b>Why 30:</b> a full frame is 3840 bytes, about 8 ms on the UC1608's SPI at 4 MHz and under 1 ms of CPU to draw, so the bus and the M33 are not the limit. The FSTN panel is: it needs roughly 150 ms to switch, so anything faster than ~20 updates per second only smears. The "FSTN response" toggle models that lag so a motion that looks right here looks right on glass. 15 fps is visibly steppy on the RPM bar; 60 buys nothing the glass can show.</p>
-    <p>Events: the session runs a simulated direct-drive kart lap at 4× speed with three sectors. A sector faster than the session best goes purple: strobe, 1-px shake, badge, sparkles, then the badge flies into its sector box. A lap end freezes and flashes the time, rolls the digits over, and a best lap gets a banner. Reboot replays the start-up: logo spin-in, name, fly-to-header, gauge sweep, dissolve.</p>
+    <p><b>Why 30:</b> a full frame is 3840 bytes, about 8 ms on the UC1608's SPI at 4 MHz and well under a millisecond of M33 time to draw, so the bus and the CPU are not the limit. The glass is: the datasheet gives 200 ms to darken and 250 ms to clear (10–90 %, typical, 25 °C; 300 / 350 max), so anything faster than ~20 updates per second only smears. 15 fps is visibly steppy on the RPM bar; 60 buys nothing the glass can show.</p>
+    <p><b>The panel row:</b> each dot is a first-order lag with time constants set from those datasheet figures, scaled with temperature by an Arrhenius law for the liquid crystal's viscosity (about 3× slower at 0 °C, 9× at −20 °C, 0.4× at 50 °C; the temperature law is a textbook estimate, not a Winstar figure), and mixed in linear light. "5:1 contrast" renders the datasheet's typical contrast ratio instead of ink black, with the dark state's slate-blue tint sampled from Winstar's product photo of this module, which itself measures about 5:1. "Viewing angle" fades contrast with the angle between your eye and the glass using the datasheet's CR ≥ 2 limits (30° toward 12 o'clock, 60° toward 6, 45° sideways; the fall-off curve between those points is a guess), and the readout in the corner gives the angle and the contrast at the panel centre. "Mount 6 o'clock up" is the trick of fitting the glass rotated 180° and mirroring the image in the UC1608, so the strong side faces a driver looking down at the dash: compare the Driver view with it on and off. The stat is JavaScript time on this device: the raster into the framebuffer, and the panel simulation, which is the expensive part here and does not exist on the device.</p>
+    <p>The session runs a simulated direct-drive 2T kart lap at 4× speed with three sectors, EGT that follows load with a lag, and water that creeps. Two themes share the core and the events, and render them differently:</p>
+    <ul>
+      <li><b>Timekeeper</b> is time-centric: big lap time, sector boxes in the header. Boot: logo spin-in, name, fly-to-header, gauge sweep, dissolve. Purple: strobe, 1-px shake, badge, sparkles. Best lap: banner.</li>
+      <li><b>Pace</b> is for the driver mid-session: a 32-block RPM ladder, a 56-px RPM number, pace delta with trend, EGT and water thermometers with their target bands at the edges, lap times demoted to one strip, an icon row. Boot: the logo coalesces from a swarm of 860 particles, the name bounces in, a CRT collapse to a line, the dash CRT-expands, ladder self-test, slot-machine digits. Purple: row glitch, diagonal sweep, a sector chip drops from the ladder. Best lap: expanding rings, a checkered flag waves through the lap strip, the time slams in. Overheat: the EGT bar blinks, a warning chip drops, a flame joins the icon row.</li>
+    </ul>
   </section>
 
   <section class="panel">
@@ -713,7 +758,7 @@ echo(str("Origin shift applied (", origin, "): ", origin_shift()));
     'U': [0x3F,0x40,0x40,0x40,0x3F], 'V': [0x1F,0x20,0x40,0x20,0x1F], 'W': [0x3F,0x40,0x38,0x40,0x3F], 'X': [0x63,0x14,0x08,0x14,0x63],
     'Y': [0x07,0x08,0x70,0x08,0x07], 'Z': [0x61,0x51,0x49,0x45,0x43],
     ':': [0x00,0x36,0x36,0x00,0x00], '.': [0x00,0x60,0x60,0x00,0x00], '-': [0x08,0x08,0x08,0x08,0x08], '+': [0x08,0x08,0x3E,0x08,0x08],
-    '%': [0x23,0x13,0x08,0x64,0x62], '/': [0x20,0x10,0x08,0x04,0x02], '!': [0x00,0x00,0x5F,0x00,0x00],
+    '%': [0x23,0x13,0x08,0x64,0x62], '/': [0x20,0x10,0x08,0x04,0x02], '!': [0x00,0x00,0x5F,0x00,0x00], '°': [0x00,0x06,0x09,0x09,0x06],
     '●': [0x1C,0x3E,0x3E,0x3E,0x1C], '○': [0x1C,0x22,0x22,0x22,0x1C], '▲': [0x70,0x7C,0x7F,0x7C,0x70], '▼': [0x07,0x1F,0x7F,0x1F,0x07]
   };
   function text57(x, y, str, v, scale) {       // returns the advance
@@ -790,6 +835,48 @@ echo(str("Origin shift applied (", origin, "): ", origin_shift()));
   const fmtTime = ms => { ms = Math.max(0, Math.round(ms)); const m = (ms / 60000) | 0, s = ((ms % 60000) / 1000) | 0, h = ((ms % 1000) / 10) | 0; return `${m}:${s < 10 ? '0' : ''}${s}.${h < 10 ? '0' : ''}${h}`; };
   const fmtDelta = ms => (ms < 0 ? '-' : '+') + (Math.abs(ms) / 1000).toFixed(2);
 
+  // ---- 8 x 8 status icons: one byte per row, MSB = left column ----
+  const ICON = {
+    gps:   [0x00,0x03,0x03,0x1B,0x1B,0xDB,0xDB,0xDB],   // signal bars
+    sd:    [0x3E,0x7E,0xFE,0xAA,0xFE,0xFE,0xFE,0x7C],   // card
+    ble:   [0x10,0x18,0x54,0x38,0x38,0x54,0x18,0x10],   // rune
+    warn:  [0x10,0x28,0x28,0x54,0x54,0x92,0x82,0xFE],   // triangle with !
+    flame: [0x10,0x18,0x38,0x3C,0x7E,0x7E,0x3C,0x18],
+    drop:  [0x10,0x10,0x38,0x38,0x7C,0x7C,0x7C,0x38],
+    flag:  [0xCC,0xCC,0x33,0x33,0xCC,0xCC,0x33,0x33],   // checkered
+    sat:   [0x00,0x1C,0x22,0x49,0x1C,0x08,0x08,0x1C]    // dish on a stalk
+  };
+  function icon8(name, x, y, v) { const g = ICON[name]; for (let j = 0; j < 8; j++) for (let i = 0; i < 8; i++) if (g[j] >> (7 - i) & 1) fbPx(x + i, y + j, v); }
+  function battery(x, y, level, v) {           // 11 x 6 outline, nub, 0..1 fill
+    fbRect(x, y, 10, 6, v); fbFill(x + 10, y + 2, 1, 2, v);
+    const n = Math.round(Math.max(0, Math.min(1, level)) * 6); if (n) fbFill(x + 2, y + 2, n, 2, v);
+  }
+  function fbCircle(cx, cy, r, v) {            // midpoint circle; v = 2 inverts
+    const put = (x, y) => { if (x < clip.x0 || y < clip.y0 || x >= clip.x1 || y >= clip.y1) return; const i = y * SW + x; fb[i] = v === 2 ? fb[i] ^ 1 : v; };
+    let x = r, y = 0, err = 1 - r;
+    while (x >= y) {
+      put(cx + x, cy + y); put(cx - x, cy + y); put(cx + x, cy - y); put(cx - x, cy - y);
+      if (x !== y) { put(cx + y, cy + x); put(cx - y, cy + x); put(cx + y, cy - x); put(cx - y, cy - x); }
+      y++; if (err < 0) err += 2 * y + 1; else { x--; err += 2 * (y - x) + 1; }
+    }
+  }
+  const fbTmp = new Uint8Array(SW * SH);
+  function glitchRows(seed, bands, maxShift) {  // tear random row bands sideways (post pass)
+    const r = mulberry32(seed);
+    for (let b = 0; b < bands; b++) {
+      const y0 = (r() * SH) | 0, h = 2 + ((r() * 5) | 0), dx = Math.round((r() * 2 - 1) * maxShift);
+      for (let y = y0; y < Math.min(SH, y0 + h); y++) {
+        const row = y * SW; fbTmp.set(fb.subarray(row, row + SW), 0); fb.fill(0, row, row + SW);
+        for (let x = 0; x < SW; x++) { const sx = x - dx; if (sx >= 0 && sx < SW) fb[row + x] = fbTmp[sx]; }
+      }
+    }
+  }
+  function squeezeY(s, cy) {                    // CRT-style vertical scale of the whole frame about row cy (post pass)
+    fbTmp.set(fb); fb.fill(0);
+    if (s <= 0.02) return;
+    for (let y = 0; y < SH; y++) { const sy = Math.round(cy + (y - cy) / s); if (sy >= 0 && sy < SH) fb.set(fbTmp.subarray(sy * SW, sy * SW + SW), y * SW); }
+  }
+
   const LOGO_SRC = {
   HI: { w: 240, h: 105, b64: "AAAAH/////////////////////////////gAAAAAAAAAP/////////////////////////////wAAAAAAAAAP/////////////////////////////4AAAAAAAAAH/////////////////////////////8AAAAAAAAAD/////////////////////////////8AAAAAAAAAA/////////////////////////////8AAAAAAAAAAH////////////////////////////8AAAAAAAAAAA////////////////////////////8AAAAAAAAAAAP///////////////////////////8AAAAAAAAAAAB///////////////////////////4AAAAAAAAAAAAP//////////////////////////wAAAAAAAAAAAAB//////////////////////////gAAAAAAAAAAAAAf/////////////////////////AAAAAAAAAAAAAAD////////////////////////+AAAAAAAAAAAAAAAf///////////////////////8AAAAAAAAAAAAAAAD///////////////////////4AAAAAAAAAAAAAAAA///////////////////////wAAAAAAAAAAAAAAAAH//////////////////////gAAAAAAAAAAAAAAAAA//////////////////////AAAAAAAAAAAAAAAAAAH////////////////////+AAAAAAAAAAAAAAAAAAB////////////////////8AAAAAAAAAAAAAAAAAAAP///////////////////4AAAAAAAAAAAAAAAAAAAB///////////////////wAAAAAAAAAAAAAAAAAAAAP//////////////////gAAAAAAAAAAAAAAAAAAAAD//////////////////AAAAAAAAAAAAAAAAAAAAAAf////////////////+AAAAAAAAAAAAAAAAAAAAAAD////////////////8AAAAAAAAAAAAAAAAAAAAAAA////////////////4AAAAAAAAAAAAAAAAAAAAAAAH///////////////wAAAAAAAAAAAAAAAAAAAAAAAA///////////////gAAAAAAAAAAAAAAAAAAAAAAAAH//////////////AAAAAAAAAAAAAAAAAAAAAAAAAB/////////////+AAAAAAAAAAAAAAAAAAAAAAAAAAP////////////8AAAAAAAAAAAAAAAAAAAAAAAAAAB////////////4AAAAAAAAAAAAAAAAAAAAAAAAAAAP///////////wAAAAAAAAAAAAAAAAAAAAAAAAAAAD///////////gAAAAAAAAAAAAAAAAAAAAAAAAAAAAf//////////AAAAAAAAAAAAAAAAAAAAAAAAAAAAAD/////////+AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAf////////8AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAP////////4AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAH////////4AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAH////////4AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAP////////8AAAAAAAAAAf//////////////////////////////////////w///////////////////////////////////////8///////////////////////////////////////+///////////////////////////////////////+f///////////////////////////////////////H///////////////////////////////////////A///////////////////////////////////////AH//////////////////////////////////////AB//////////////////////////////////////AAP////////////////////////////////////+AAB////////////////////////////////////8AAAP///////////////////////////////////4AAAD///////////////////////////////////wAAAAf//////////////////////////////////gAAAAD//////////////////////////////////AAAAAAf////////////////////////////////+AAAAAAH////////////////////////////////8AAAAAAA////////////////////////////////4AAAAAAAH///////////////////////////////wAAAAAAAB///////////////////////////////gAAAAAAAAP//////////////////////////////AAAAAAAAAB/////////////////////////////+AAAAAAAAAAP////////////////////////////8AAAAAAAAAAD////////////////////////////4AAAAAAAAAAAf///////////////////////////wAAAAAAAAAAAD///////////////////////////gAAAAAAAAAAAAf//////////////////////////AAAAAAAAAAAAAH/////////////////////////+AAAAAAAAAAAAAA/////////////////////////8AAAAAAAAAAAAAAH////////////////////////4AAAAAAAAAAAAAAA////////////////////////wAAAAAAAAAAAAAAAP///////////////////////gAAAAAAAAAAAAAAAB///////////////////////AAAAAAAAAAAAAAAAAP/////////////////////+AAAAAAAAAAAAAAAAAB/////////////////////8AAAAAAAAAAAAAAAAAAf////////////////////4AAAAAAAAAAAAAAAAAAD////////////////////wAAAAAAAAAAAAAAAAAAAf///////////////////gAAAAAAAAAAAAAAAAAAAH///////////////////AAAAAAAAAAAAAAAAAAAAA//////////////////+AAAAAAAAAAAAAAAAAAAAAH/////////////////8AAAAAAAAAAAAAAAAAAAAAA/////////////////4AAAAAAAAAAAAAAAAAAAAAAP////////////////wAAAAAAAAAAAAAAAAAAAAAAB////////////////gAAAAAAAAAAAAAAAAAAAAAAAP///////////////AAAAAAAAAAAAAAAAAAAAAAAAB//////////////+AAAAAAAAAAAAAAAAAAAAAAAAAf/////////////8AAAAAAAAAAAAAAAAAAAAAAAAAD/////////////4AAAAAAAAAAAAAAAAAAAAAAAAAAf////////////wAAAAAAAAAAAAAAAAAAAAAAAAAAD////////////gAAAAAAAAAAAAAAAAAAAAAAAAAAA////////////AAAAAAAAAAAAAAAAAAAAAAAAAAAAH//////////+AAAAAAAAAAAAAAAAAAAAAAAAAAAAA//////////4AAAAAAAAAAAAAAAAAAAAAAAAAAAAAP/////////wAAAAAAAAAAAAAAAAAAAAAAAAAAAAAB/////////gAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAP///////+AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAB///////4AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAf//////gAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAD/////+AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAf////wAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAD///8AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAH//AAAAAAAAAAA" },
   MID: { w: 120, h: 52, b64: "AAf//////////////gAAAAf//////////////wAAAAH//////////////wAAAAB//////////////wAAAAAP/////////////wAAAAAB/////////////gAAAAAAP////////////AAAAAAAD///////////+AAAAAAAAf//////////8AAAAAAAAD//////////4AAAAAAAAAf/////////wAAAAAAAAAH/////////gAAAAAAAAAA/////////AAAAAAAAAAAH///////+AAAAAAAAAAAA///////8AAAAAAAAAAAAP//////4AAAAAAAAAAAAB//////wAAAAAAAAAAAAAP/////gAAAAAAAAAAAAAB/////AAAAAAAAAAAAAAAf///+AAAAAAAAAAAAAAAf///8AAAAAf//////////////////8///////////////////+////////////////////H///////////////////A///////////////////AP/////////////////+AB/////////////////8AAP////////////////4AAB////////////////wAAAf///////////////gAAAD///////////////AAAAAf/////////////+AAAAAD/////////////8AAAAAAf////////////4AAAAAAH////////////wAAAAAAA////////////gAAAAAAAH///////////AAAAAAAAA//////////+AAAAAAAAAP/////////8AAAAAAAAAB/////////4AAAAAAAAAAP////////wAAAAAAAAAAB////////gAAAAAAAAAAAf///////AAAAAAAAAAAAD//////+AAAAAAAAAAAAAf/////8AAAAAAAAAAAAAD/////4AAAAAAAAAAAAAA/////gAAAAAAAAAAAAAAH////AAAAAAAAAAAAAAAA///8AAAAAAAAAAAAAAAAH//wAAAAAAAAAAAAAAAAA/8AAAAA" },
@@ -801,10 +888,12 @@ echo(str("Origin shift applied (", origin, "): ", origin_shift()));
   const SECTOR_BASE = [20100, 22300, 20100];
   const sim = {
     mul: 4, auto: true, lap: 12, t: 24300, rpm: 9800, rpmT: 9800, topRpm: 14200, phase: 'accel', corners: [], nextCorner: 0, cornerMin: 7000,
-    sectorIdx: 1, sectorStart: 20150, sectorEnds: [20150, 42400, 62500], bests: [20400, 22600, 20300], bestLap: 61900, lastLap: 62870,
+    sectorIdx: 1, sectorStart: 20150, sectorEnds: [20150, 42400, 62500], bests: [20400, 22600, 20300], bestLap: 63300, lastLap: 63870,
     sectorState: ['done', 'current', 'pending'], completed: [20150, 0, 0], vbat: 12.4, sats: 12, sd: 61, peak: 0, peakT: 0, rng: mulberry32(7),
-    delta: -430
+    delta: -430, trend: 0, egt: 1120, egtPeak: 1120, egtBoost: 0, water: 127, batt: 0.72
   };
+  const EGT = { min: 800, max: 1400, lo: 1100, hi: 1250, warn: 1300 };   // °F, 2T kart
+  const H2O = { min: 80, max: 200, lo: 120, hi: 145, warn: 150 };        // °F
   function planCorners(from) {
     const r = sim.rng; sim.corners = []; let t = from + 1500 + r() * 2000;
     while (t < sim.sectorEnds[2] - 3000) { sim.corners.push(t); t += 6500 + r() * 6500; }
@@ -821,11 +910,13 @@ echo(str("Origin shift applied (", origin, "): ", origin_shift()));
   const fx = [];                                   // transient overlay animations
   function pushFx(o) { fx.push(o); if (fx.length > 12) fx.shift(); }
   function endSector(now, mode) {                  // mode: 'auto' | 'purple' | 'normal'
-    const k = sim.sectorIdx, st = sim.t - sim.sectorStart;
+    const k = sim.sectorIdx, prev = sim.bests[k];
+    let st = sim.t - sim.sectorStart;
+    if (mode === 'purple' && st >= prev) st = prev - 150 - sim.rng() * 450;   // forced purple: a plausible margin
     const purple = mode === 'purple' || (mode === 'auto' && st < sim.bests[k]);
     if (purple) sim.bests[k] = Math.min(sim.bests[k], st);
     sim.completed[k] = st; sim.sectorState[k] = purple ? 'purple' : 'done';
-    pushFx({ type: purple ? 'purple' : 'sector', k, t0: now, seed: (now | 0) ^ (k * 7919) });
+    pushFx({ type: purple ? 'purple' : 'sector', k, t0: now, seed: (now | 0) ^ (k * 7919), st, prev });
     if (k < 2) { sim.sectorIdx = k + 1; sim.sectorStart = sim.t; sim.sectorState[k + 1] = 'current'; }
   }
   function endLap(now) {
@@ -850,8 +941,15 @@ echo(str("Origin shift applied (", origin, "): ", origin_shift()));
     let d = 0; for (let k = 0; k < sim.sectorIdx; k++) d += sim.completed[k] - sim.bests[k];
     const el = sim.t - sim.sectorStart, plan = sim.sectorEnds[sim.sectorIdx] - (sim.sectorIdx ? sim.sectorEnds[sim.sectorIdx - 1] : 0);
     d += el - sim.bests[sim.sectorIdx] * Math.min(1, el / plan);
+    const prevDelta = sim.delta;
     sim.delta += (d - sim.delta) * Math.min(1, dt / 400);
+    sim.trend += ((sim.delta - prevDelta) / Math.max(1, dt) * 1000 - sim.trend) * Math.min(1, dt / 1500);   // ms per second
     sim.vbat = 12.4 - 0.08 * Math.sin(now / 9000);
+    const egtT = 880 + (sim.rpm / 14600) * 360 + sim.egtBoost;             // EGT follows load with a lag
+    sim.egt += (egtT - sim.egt) * Math.min(1, dt / 1400);
+    if (sim.egt > sim.egtPeak) sim.egtPeak = sim.egt; else sim.egtPeak = Math.max(sim.egt, sim.egtPeak - 15 * dt / 1000);
+    if (sim.egtBoost > 0) sim.egtBoost = Math.max(0, sim.egtBoost - 25 * dt / 1000);
+    sim.water += ((126 + (sim.rpm > 12000 ? 5 : 0) + sim.egtBoost * 0.08) - sim.water) * Math.min(1, dt / 9000);
     if (!sim.auto) return;
     if (sim.sectorIdx < 2 && sim.t >= sim.sectorEnds[sim.sectorIdx]) endSector(now, 'auto');
     else if (sim.sectorIdx === 2 && sim.t >= sim.sectorEnds[2]) { endSector(now, 'auto'); endLap(now); }
@@ -923,7 +1021,7 @@ echo(str("Origin shift applied (", origin, "): ", origin_shift()));
       if (ph > 0.5) { fbInvert(x - 1, y, 3, 1); fbInvert(x, y - 1, 1, 1); fbInvert(x, y + 1, 1, 1); } else fbInvert(x, y, 1, 1);
     }
   }
-  function drawFx(now) {
+  function drawFxA(now) {
     for (const e of fx) {
       const age = now - e.t0;
       if (e.type === 'purple') {
@@ -955,16 +1053,16 @@ echo(str("Origin shift applied (", origin, "): ", origin_shift()));
       }
     }
   }
-  function postFx(now) {                          // strobe + shake for a purple sector
+  function postFxA(now) {                         // strobe + shake for a purple sector
     let shake = 0, strobe = false;
     for (const e of fx) if (e.type === 'purple') { const age = now - e.t0; if (age < 60 || (age >= 110 && age < 170)) strobe = true; if (age < 160) shake = ((age / 30) | 0) & 1 ? 1 : -1; }
     if (strobe) for (let i = 0; i < fb.length; i++) fb[i] ^= 1;
     return shake;
   }
 
-  // ---- boot sequence ----
-  const ui = { mode: 'boot', bootT0: 0, rpmShown: 0 };
-  function renderBoot(now) {
+  // ---- boot sequence (theme A) ----
+  const ui = { mode: 'boot', bootT0: 0, rpmShown: 0, theme: 'B' };
+  function renderBootA(now) {
     const age = now - ui.bootT0;
     const live = age >= 2300;
     if (age >= 2200) {                                        // header bar wipes in from the left
@@ -997,9 +1095,168 @@ echo(str("Origin shift applied (", origin, "): ", origin_shift()));
     }
     if (age >= 3100) ui.mode = 'live';
   }
-  function renderLive(now) {
+  function renderLiveA(now) {
     ui.rpmShown += (sim.rpm - ui.rpmShown) * 0.5;
-    drawHeader(now); drawBigTime(now); drawSpeedDelta(now, ui.rpmShown); drawRpm(now, ui.rpmShown); drawStatus(now); drawFx(now);
+    drawHeader(now); drawBigTime(now); drawSpeedDelta(now, ui.rpmShown); drawRpm(now, ui.rpmShown); drawStatus(now); drawFxA(now);
+  }
+
+  // ==================================================================
+  //  Theme B — "Pace": RPM ladder + giant RPM, pace delta, EGT / water
+  //  thermometers, lap times demoted to a strip, icon row.
+  // ==================================================================
+  const LAD = { x: 8, n: 32, bw: 6, gap: 1, y: 0, h: 12, max: 16000, shift: 13500, over: 14000 };
+  const GIANT = { y: 14, h: 56 };
+  const VIT = { egtX: 2, h2oX: 211, w: 28, barW: 10, barY: 23, barH: 42, labelY: 14, valY: 66 };
+  const PACE_Y = 76, STRIP_Y = 102, ICON_Y = 116;
+
+  function drawLadder(now, rpm, opts) {          // opts.lit overrides the lit count (self-test), opts.flash blinks all
+    const lit = opts && opts.lit !== undefined ? opts.lit : Math.round(LAD.n * Math.min(1, rpm / LAD.max));
+    const peakBlk = Math.round(LAD.n * Math.min(1, sim.peak / LAD.max));
+    for (let k = 0; k < LAD.n; k++) {
+      const x = LAD.x + k * (LAD.bw + LAD.gap), shiftZone = k >= Math.round(LAD.n * LAD.shift / LAD.max);
+      if (k < lit) fbFill(x, LAD.y, LAD.bw, LAD.h, 1);
+      else if (shiftZone) { fbRect(x, LAD.y, LAD.bw, LAD.h, 1); fbDither(x + 1, LAD.y + 1, LAD.bw - 2, LAD.h - 2, 1, 1); }
+      else fbFill(x, LAD.y + LAD.h - 2, LAD.bw, 2, 1);                    // unlit: a stub at the base
+      if (k === peakBlk - 1 && peakBlk > lit) fbRect(x, LAD.y, LAD.bw, LAD.h, 1);
+    }
+    const flash = (opts && opts.flash) || (rpm > LAD.over && ((now / 62) | 0) & 1);
+    if (flash) fbInvert(LAD.x, LAD.y, LAD.n * (LAD.bw + LAD.gap) - LAD.gap, LAD.h);
+  }
+  function drawGiantRpm(now, rpm, override) {
+    const str = override !== undefined ? override : String(Math.max(0, Math.round(rpm / 10) * 10));
+    segText(120, GIANT.y, GIANT.h, str, 1, 'center');
+  }
+  function thermo(x, label, value, peak, scale, now, blink, fillK) {   // vertical thermometer with target band
+    const bx = x + ((VIT.w - VIT.barW) >> 1), by = VIT.barY, bh = VIT.barH;
+    text57(x + ((VIT.w - width57(label, 1)) >> 1), VIT.labelY, label, 1);
+    const yOf = v => by + bh - 1 - Math.round((bh - 2) * Math.max(0, Math.min(1, (v - scale.min) / (scale.max - scale.min))));
+    fbRect(bx, by, VIT.barW, bh, 1);
+    fbDither(bx + 1, yOf(scale.hi), VIT.barW - 2, yOf(scale.lo) - yOf(scale.hi) + 1, 1, 1);     // target band
+    const shown = scale.min + (value - scale.min) * (fillK === undefined ? 1 : fillK);
+    const yv = yOf(shown); fbFill(bx + 1, yv, VIT.barW - 2, by + bh - 1 - yv, 1);
+    if (peak !== undefined && peak > shown + (scale.max - scale.min) * 0.02) fbInvert(bx - 2, yOf(peak), VIT.barW + 4, 1);
+    fbFill(bx - 2, yOf(scale.hi), 2, 1, 1); fbFill(bx + VIT.barW, yOf(scale.lo), 2, 1, 1);   // band ticks
+    const vs = String(Math.round(shown)); text57(x + ((VIT.w - width57(vs, 1)) >> 1), VIT.valY, vs, 1);
+    if (blink && ((now / 125) | 0) & 1) fbInvert(x, VIT.labelY - 1, VIT.w, VIT.valY + 9 - VIT.labelY);
+  }
+  function drawVitals(now, fillK) {
+    thermo(VIT.egtX, 'EGT', sim.egt, sim.egtPeak, EGT, now, sim.egt > EGT.warn, fillK);
+    thermo(VIT.h2oX, 'H2O', sim.water, undefined, H2O, now, sim.water > H2O.warn, fillK);
+  }
+  function drawPaceRow(now, rpmShown, dissolveK) {
+    text57(4, PACE_Y - 1, 'PACE', 1);
+    segText(4, PACE_Y + 7, 16, fmtDelta(sim.delta), 1);
+    const tr = sim.trend; if (Math.abs(tr) > 40) text57(62, PACE_Y + 11, tr < 0 ? '▼' : '▲', 1);   // trend: gaining or losing
+    const cx = 120, bw = 72, by = PACE_Y + 10;
+    fbFill(cx - bw / 2, by + 4, bw, 1, 1); fbFill(cx, by, 1, 9, 1);
+    const px = Math.max(-bw / 2, Math.min(bw / 2, Math.round(sim.delta / 1000 * 24)));
+    if (px < 0) fbFill(cx + px, by + 1, -px, 7, 1); else if (px > 0) fbDither(cx + 1, by + 1, px, 7, 1, 2);
+    const mph = String(Math.round(rpmShown / 14000 * 72));
+    segText(216, PACE_Y + 7, 16, mph, 1, 'right'); text57(218, PACE_Y + 16, 'MPH', 1);
+    if (dissolveK !== undefined && dissolveK < 1) dissolve(0, PACE_Y - 2, 240, 26, dissolveK, 17);
+  }
+  function drawLapStrip(now) {
+    const lapFx = fx.find(e => e.type === 'lap' && now - e.t0 < 1100);
+    const last = lapFx && now - lapFx.t0 < 700 ? fmtTime(lapFx.lapTime) : fmtTime(sim.lastLap);
+    let x = 4; x += text57(x, STRIP_Y, 'LAP ', 1) + 1;
+    if (lapFx && now - lapFx.t0 >= 700) { const k = tw(lapFx.t0 + 700, 400, now, ease.outCubic), dy = Math.round(k * 9); setClip(x, STRIP_Y - 1, 14, 9); text57(x, STRIP_Y - dy, String(lapFx.oldLap), 1); text57(x, STRIP_Y + 9 - dy, String(sim.lap), 1); resetClip(); }
+    else text57(x, STRIP_Y, String(sim.lap), 1);
+    x = 60; x += text57(x, STRIP_Y, 'LAST ', 1) + 1;
+    if (lapFx && now - lapFx.t0 < 700) { fbFill(x - 2, STRIP_Y - 2, width57(last, 1) + 4, 11, 1); text57(x, STRIP_Y, last, 0); }   // fresh lap: inverted
+    else text57(x, STRIP_Y, last, 1);
+    x = 150; x += text57(x, STRIP_Y, 'BEST ', 1) + 1; text57(x, STRIP_Y, fmtTime(sim.bestLap), 1);
+    fbFill(0, STRIP_Y - 3, 240, 1, 1);
+  }
+  function drawIconRow(now) {
+    let x = 4;
+    icon8('gps', x, ICON_Y, 1); x += 10; x += text57(x, ICON_Y + 1, String(sim.sats), 1) + 8;
+    icon8('ble', x, ICON_Y, 1); x += 12;
+    icon8('sd', x, ICON_Y, 1); x += 10; x += text57(x, ICON_Y + 1, sim.sd + '%', 1) + 8;
+    battery(x, ICON_Y + 1, sim.batt, 1); x += 18;
+    const rec = ((now / 500) | 0) & 1; text57(x, ICON_Y + 1, rec ? '●' : '○', 1); x += 7; x += text57(x, ICON_Y + 1, 'LOG', 1) + 8;
+    if (sim.egt > EGT.warn || sim.water > H2O.warn) { if (((now / 250) | 0) & 1) icon8('flame', 226, ICON_Y, 1); icon8('warn', 214, ICON_Y, 1); }
+    else if (sim.lastLap <= sim.bestLap) icon8('flag', 228, ICON_Y, 1);
+  }
+  function drawChip(text, cx, y, v) {           // small inverted pill with 5x7 text, used by the drop-down chips
+    const w = width57(text, 1) + 10; fbFill(cx - (w >> 1), y, w, 11, v); text57(cx - (w >> 1) + 5, y + 2, text, v ^ 1);
+    return w;
+  }
+  const CHIP_TYPES = { purple: 1800, sector: 900, overheat: 2400 };
+  function drawFxB(now) {
+    let newest = null;                                                  // only the newest chip is shown, over the ladder
+    for (const e of fx) if (CHIP_TYPES[e.type] && now >= e.t0 && now - e.t0 < CHIP_TYPES[e.type]) newest = e;
+    for (const e of fx) {
+      const age = now - e.t0; if (age < 0) continue;
+      if (e.type === 'purple' || e.type === 'sector') {
+        const purple = e.type === 'purple', life = CHIP_TYPES[e.type];
+        if (e === newest) {
+          const drop = ease.outBack(clamp01(age / 320)), up = ease.inCubic(clamp01((age - (life - 250)) / 250));
+          const txt = purple ? `S${e.k + 1} PURPLE ${fmtDelta(e.st - e.prev)}` : `S${e.k + 1} ${fmtDelta(e.st - e.prev)}`;
+          drawChip(txt, 120, Math.round(-13 + 13 * drop - 16 * up), 1);
+        }
+        if (purple && age < 700) {                                        // diagonal sweep band, drawn as an XOR dither
+          const x0 = Math.round(-60 + 360 * ease.inOutCubic(age / 700));
+          for (let y = 0; y < SH; y++) { const xs = x0 + (y >> 1); for (let x = Math.max(0, xs); x < Math.min(SW, xs + 28); x++) if (((x + y) & 1) === 0) fb[y * SW + x] ^= 1; }
+        }
+      } else if (e.type === 'lap' && e.best && age < 2200) {
+        if (age < 900) for (let i = 0; i < 3; i++) { const r = Math.round(((age - i * 130) / 900) * 170); if (r > 2 && r < 170) fbCircle(120, 60, r, 2); }
+        if (age < 1300) {                                                   // checkered flag waves right-to-left through the strip
+          const bx0 = Math.round(250 - age * 0.33), bw2 = 88, y0 = STRIP_Y - 9, y1 = STRIP_Y + 14;
+          for (let x = Math.max(0, bx0); x < Math.min(SW, bx0 + bw2); x++) {
+            const wy = Math.round(3 * Math.sin((x - bx0) / 9 + age / 70));
+            for (let y = y0; y < y1; y++) if ((((x - bx0) >> 3) + ((y + wy) >> 3)) & 1) fb[y * SW + x] ^= 1;
+          }
+        }
+        const s = ease.outBack(clamp01(age / 260)), hold = age < 1700 ? 1 : 1 - ease.inCubic(clamp01((age - 1700) / 300));
+        const w = Math.round(150 * s), h = Math.round(34 * s * hold);
+        if (h > 1) { fbFill(120 - (w >> 1), 46 - (h >> 1), w, h, 1); if (s > 0.85 && hold > 0.9) { text57(120 - (width57('BEST LAP', 2) >> 1), 32, 'BEST LAP', 0, 2); text57(120 - (width57(fmtTime(e.lapTime), 1) >> 1), 50, fmtTime(e.lapTime), 0); } }
+      } else if (e.type === 'overheat' && e === newest) {
+        const drop = ease.outBack(clamp01(age / 320)), up = ease.inCubic(clamp01((age - 2150) / 250));
+        drawChip(`EGT ${Math.round(sim.egt)}° HOT`, 120, Math.round(-13 + 13 * drop - 16 * up), 1);
+      }
+    }
+  }
+  function postFxB(now) {
+    for (const e of fx) if (e.type === 'purple') { const age = now - e.t0; if (age < 220) glitchRows(e.seed + ((age / 33) | 0), 7, 10); }
+    return 0;
+  }
+  // ---- boot B: swarm → name → CRT collapse → CRT expand → self-test ----
+  const swarm = [];
+  { const r = mulberry32(99), b = LOGO.mid;
+    for (let by = 0; by < b.h >> 1; by++) for (let bx = 0; bx < b.w >> 1; bx++) {
+      const n = b.bits[(2 * by) * b.w + 2 * bx] + b.bits[(2 * by) * b.w + 2 * bx + 1] + b.bits[(2 * by + 1) * b.w + 2 * bx] + b.bits[(2 * by + 1) * b.w + 2 * bx + 1];
+      if (n >= 2) { const a = r() * Math.PI * 2; swarm.push({ tx: 60 + 2 * bx, ty: 24 + 2 * by, sx: 120 + Math.cos(a) * 190, sy: 50 + Math.sin(a) * 160, d: r() * 450, dur: 700 + r() * 500 }); }
+    }
+  }
+  function renderBootB(now) {
+    const age = now - ui.bootT0;
+    if (age < 2650) {                                                    // scene 1: logo + name
+      if (age < 1500) { for (const p of swarm) { const k = ease.outCubic(clamp01((age - p.d) / p.dur)); fbFill(Math.round(p.sx + (p.tx - p.sx) * k), Math.round(p.sy + (p.ty - p.sy) * k), 2, 2, 1); } }
+      else fbBlit(LOGO.mid, 60, 24, 1);
+      if (age >= 1300) { const name = 'PERCHWERKS'; for (let i = 0; i < name.length; i++) { const kk = bounce(clamp01((age - 1300 - i * 45) / 520)); text57(60 + i * 12, Math.round(-16 + (92 + 16) * kk), name[i], 1, 2); } }
+      if (age >= 2300) squeezeY(1 - ease.inCubic(clamp01((age - 2300) / 300)), 56);
+      if (age >= 2550) { const lw = Math.round(240 * (1 - ease.inCubic(clamp01((age - 2550) / 100)))); fbFill(120 - (lw >> 1), 55, lw, 2, 1); }
+      return;
+    }
+    // scene 2: the dash expands from a line, then self-tests
+    const a2 = age - 2650, k = clamp01((a2 - 80) / 420), s = ease.outCubic(k);
+    const testK = clamp01((a2 - 500) / 900);
+    let lit; if (testK < 1) { const q = testK < 0.5 ? ease.inOutCubic(testK / 0.5) : 1 - ease.inOutCubic((testK - 0.5) / 0.5) * (1 - Math.min(1, sim.rpm / LAD.max)); lit = Math.round(LAD.n * q); }
+    drawLadder(now, sim.rpm, testK < 1 ? { lit } : undefined);
+    let str = String(Math.round(sim.rpm / 10) * 10); if (str.length < 5) str = ' '.repeat(5 - str.length) + str;
+    if (a2 < 1700) { const rr = mulberry32((now / 50) | 0); let o = ''; for (let i = 0; i < str.length; i++) o += (str[i] === ' ' || a2 > 1000 + i * 140) ? str[i] : String((rr() * 10) | 0); str = o; }
+    drawGiantRpm(now, sim.rpm, str.trim());
+    drawVitals(now, ease.outBack(clamp01((a2 - 500) / 700)));
+    drawPaceRow(now, sim.rpm, clamp01((a2 - 900) / 500));
+    drawLapStrip(now); drawIconRow(now);
+    if (a2 >= 1200 && a2 < 1700) dissolve(0, STRIP_Y - 6, 240, 32, clamp01((a2 - 1200) / 500), 23);
+    if (k < 1) { squeezeY(Math.max(0.02, s), 56); if (s < 0.98) { const ex = Math.round(56 * s); fbFill(0, 56 - ex - 1, 240, 1, 1); fbFill(0, 56 + ex + 1, 240, 1, 1); } }
+    if (age >= 2650 + 1750) ui.mode = 'live';
+  }
+  function bounce(t) { const n1 = 7.5625, d1 = 2.75; if (t < 1 / d1) return n1 * t * t; if (t < 2 / d1) return n1 * (t -= 1.5 / d1) * t + 0.75; if (t < 2.5 / d1) return n1 * (t -= 2.25 / d1) * t + 0.9375; return n1 * (t -= 2.625 / d1) * t + 0.984375; }
+  function renderLiveB(now) {
+    ui.rpmShown += (sim.rpm - ui.rpmShown) * 0.5;
+    drawLadder(now, ui.rpmShown); drawGiantRpm(now, ui.rpmShown); drawVitals(now); drawPaceRow(now, ui.rpmShown); drawLapStrip(now); drawIconRow(now); drawFxB(now);
   }
   function renderTest() {
     fbClear(0);
@@ -1011,13 +1268,13 @@ echo(str("Origin shift applied (", origin, "): ", origin_shift()));
   let shakeNow = 0;
   function renderFrame(now) {                     // one UI tick
     fbClear(0);
-    if (ui.mode === 'boot') renderBoot(now); else renderLive(now);
-    shakeNow = postFx(now);
-    while (fx.length && now - fx[0].t0 > 2200) fx.shift();
+    if (ui.theme === 'A') { if (ui.mode === 'boot') renderBootA(now); else renderLiveA(now); shakeNow = postFxA(now); }
+    else { if (ui.mode === 'boot') renderBootB(now); else renderLiveB(now); shakeNow = postFxB(now); }
+    while (fx.length && now - fx[0].t0 > 2600) fx.shift();
   }
 
   // ---- fixed-step scheduler ----
-  const demo = { fps: 30, screen: 'live', uiNow: 0, acc: 0, lastReal: 0, fstn: true, frames: 0, renderMs: 0 };
+  const demo = { fps: 30, screen: 'live', uiNow: 0, acc: 0, lastReal: 0, fstn: true, frames: 0, renderMs: 0, lcdMs: 0 };
   function uiTick(stepMs) {
     demo.uiNow += stepMs;
     if (ui.mode === 'live') simStep(stepMs * sim.mul, demo.uiNow);
@@ -1027,6 +1284,7 @@ echo(str("Origin shift applied (", origin, "): ", origin_shift()));
   }
   function reboot() { ui.mode = 'boot'; ui.bootT0 = demo.uiNow; ui.rpmShown = 0; fx.length = 0; }
   reboot();
+  window.perchDemo = { sim, fx, ui, demo, fb, reboot, endLap, endSector, pushFx };   // poke at it from the console
 
   // ------------------------------------------------------------------
   //  3D
@@ -1063,9 +1321,10 @@ echo(str("Origin shift applied (", origin, "): ", origin_shift()));
     return mesh;
   }
 
+  const pivot = new THREE.Group(); scene.add(pivot);   // rolls 180° about Z for the "6 o'clock up" mount
   const model = new THREE.Group();
   model.position.set(-P.lb_w / 2, -P.lb_h / 2, 0);   // outline centre at the origin
-  scene.add(model);
+  pivot.add(model);
   const G = { frame: new THREE.Group(), glass: new THREE.Group(), pins: new THREE.Group(), led: new THREE.Group(), pegs: new THREE.Group(), chip: new THREE.Group(), tape: new THREE.Group(), outlines: new THREE.Group() };
   const moving = { frame: new THREE.Group(), rear: new THREE.Group() };   // exploded-view carriers
   model.add(moving.frame, moving.rear, G.glass, G.chip, G.tape, G.outlines);
@@ -1096,7 +1355,41 @@ echo(str("Origin shift applied (", origin, "): ", origin_shift()));
   dotTex.magFilter = THREE.NearestFilter; dotTex.minFilter = THREE.LinearMipmapLinearFilter; dotTex.generateMipmaps = true;
   dotTex.anisotropy = renderer.capabilities.getMaxAnisotropy(); dotTex.repeat.set(SW / TEXW, 1); dotTex.wrapS = THREE.ClampToEdgeWrapping;
   const vaPlane = new THREE.Mesh(new THREE.PlaneGeometry(P.va_w, P.va_h), new THREE.MeshBasicMaterial({ color: 0xe4eadf }));
-  const aaPlane = new THREE.Mesh(new THREE.PlaneGeometry(P.aa_w, P.aa_h), new THREE.MeshBasicMaterial({ map: dotTex }));
+  // Viewing-angle model. Datasheet: CR ≥ 2 holds out to θ = 30° toward 12 o'clock (ψ 180°), 60° toward 6 o'clock (ψ 0°),
+  // 45° sideways. CR falls from CR0 on-axis to 2 at that limit, log-linearly in (θ/θlim)², and on to 1 past it.
+  // The texture carries transmittance; the shader mixes background and dark state per fragment with the local CR.
+  const aaMat = new THREE.ShaderMaterial({
+    uniforms: {
+      map: { value: dotTex }, uBg: { value: new THREE.Vector3(1, 1, 1) }, uDarkTint: { value: new THREE.Vector3(1, 1, 1) },
+      uCR0: { value: 5 }, uLimUp: { value: 30 }, uLimDown: { value: 60 }, uLimSide: { value: 45 }, uFlip: { value: 0 }, uAngle: { value: 1 }
+    },
+    vertexShader: `varying vec2 vUv; varying vec3 vPos;
+      void main(){ vUv = uv; vPos = (modelMatrix * vec4(position,1.0)).xyz; gl_Position = projectionMatrix * viewMatrix * vec4(vPos,1.0); }`,
+    fragmentShader: `precision highp float; uniform sampler2D map; uniform vec3 uBg, uDarkTint; uniform float uCR0, uLimUp, uLimDown, uLimSide, uFlip, uAngle;
+      varying vec2 vUv; varying vec3 vPos;
+      vec3 toSrgb(vec3 c){ return mix(12.92*c, 1.055*pow(c, vec3(1.0/2.4)) - 0.055, step(0.0031308, c)); }
+      void main(){
+        float v = texture2D(map, vec2(vUv.x * ${(SW / TEXW).toFixed(6)}, vUv.y)).r;
+        vec3 V = normalize(cameraPosition - vPos);                    // panel normal is +Z, 12 o'clock is +Y
+        float cr = uCR0, dim = 1.0;
+        if (uAngle > 0.5) {
+          float ct = clamp(abs(V.z), 0.0, 1.0), th = degrees(acos(ct));
+          vec2 d = V.xy; float dl = length(d); d = dl > 1e-4 ? d / dl : vec2(0.0, 1.0);
+          float dy = uFlip > 0.5 ? -d.y : d.y;
+          float limY = dy > 0.0 ? uLimUp : uLimDown;
+          float inv2 = d.x*d.x/(uLimSide*uLimSide) + dy*dy/(limY*limY);
+          float lim = inversesqrt(max(inv2, 1e-6));
+          float r2 = (th/lim)*(th/lim);
+          cr = max(1.0, uCR0 * pow(2.0/uCR0, r2));
+          dim = 0.55 + 0.45 * ct;                                      // reflective brightness falls off-axis too
+        }
+        float Lbg = dot(uBg, vec3(0.2126, 0.7152, 0.0722));
+        vec3 dark = min(uDarkTint * (Lbg / cr), uBg);
+        vec3 c = mix(uBg, dark, v) * dim;
+        gl_FragColor = vec4(toSrgb(clamp(c, 0.0, 1.0)), 1.0);
+      }`
+  });
+  const aaPlane = new THREE.Mesh(new THREE.PlaneGeometry(P.aa_w, P.aa_h), aaMat);
   const gapCanvas = document.createElement('canvas'); gapCanvas.width = gapCanvas.height = 32;
   const gapTex = new THREE.CanvasTexture(gapCanvas); gapTex.wrapS = gapTex.wrapT = THREE.RepeatWrapping; gapTex.repeat.set(SW, SH); gapTex.anisotropy = dotTex.anisotropy;
   const gapPlane = new THREE.Mesh(new THREE.PlaneGeometry(P.aa_w, P.aa_h), new THREE.MeshBasicMaterial({ map: gapTex, transparent: true, depthWrite: false }));
@@ -1171,25 +1464,107 @@ echo(str("Origin shift applied (", origin, "): ", origin_shift()));
   // ------------------------------------------------------------------
   const lc = new Float32Array(SW * SH);
   const flatCanvas = document.getElementById('flat'), flatCtx = flatCanvas.getContext('2d'), flatImg = flatCtx.createImageData(SW, SH);
-  const demoOpts = { backlight: true, flat: false };
+  const demoOpts = { backlight: true, flat: false, cr5: false };
+  // Panel model. WO240128A-TFH datasheet: Tr 200 ms / Tf 250 ms typ (300 / 350 max), 10–90 %, 25 °C; CR 5 typ.
+  // Each dot is a first-order lag; 10→90 % of a first-order step takes τ·ln 9, so τ = T/ln 9.
+  // Temperature scales τ by an Arrhenius law for the LC rotational viscosity (Ea ≈ 30 kJ/mol):
+  // about 3× slower at 0 °C, 9× at −20 °C, 0.4× at 50 °C. Not from the datasheet; fit it on the bench.
+  const PANEL = { trise: 200, tfall: 250, cr: 5, tempC: 25, eaOverR: 3600 };
+  const LN9 = Math.log(9);
+  function panelTau() {                                   // [τ to dark, τ to clear] in ms at PANEL.tempC
+    const k = Math.exp(PANEL.eaOverR * (1 / (PANEL.tempC + 273.15) - 1 / 298.15));
+    return [PANEL.trise / LN9 * k, PANEL.tfall / LN9 * k];
+  }
+  // Transmittance → colour. Mixed in linear light (mixing sRGB codes renders mid-transition too dark);
+  // with "5:1 contrast" the dark state is the background at 1/CR luminance, as the datasheet implies.
+  const s2l = c => { c /= 255; return c <= 0.04045 ? c / 12.92 : Math.pow((c + 0.055) / 1.055, 2.4); };
+  const l2s = L => Math.round(255 * (L <= 0.0031308 ? 12.92 * L : 1.055 * Math.pow(L, 1 / 2.4) - 0.055));
+  const lut = new Uint8Array(256 * 3);
+  const PHOTO_DARK = [89, 85, 114];     // dark state sampled from Winstar's WO240128A product photo: slate blue, not gray.
+                                        // That photo measures 5.2:1 median (6.6:1 at the darkest dots), i.e. the datasheet panel.
+  const lumY = rgb => 0.2126 * rgb[0] + 0.7152 * rgb[1] + 0.0722 * rgb[2];
+  const wheel = { on: false, gyro: false, eye: null, R: null, theta: 0, dir: '6', cr: 5, behind: false, lutCr: 0, lastEvent: 0 };
+  function buildLut() {
+    const bg = lcdBg(), lb = bg.map(s2l);
+    let ld = LCD.dark.map(s2l);
+    if (demoOpts.cr5) { const pd = PHOTO_DARK.map(s2l), k = (lumY(lb) / PANEL.cr) / lumY(pd); ld = pd.map(c => Math.min(1, c * k)); }   // photo tint, datasheet ratio
+    let lf = ld, dim = 1;                                      // flat view in Wheel mode: apply the gyro's contrast and dimming
+    if (wheel.on && wheel.gyro && wheel.eye) { const Ld = lumY(ld), cr = Math.max(1, Math.min(lumY(lb) / Ld, wheel.cr)); lf = ld.map(c => Math.min(1, c / Ld * (lumY(lb) / cr))); dim = 0.55 + 0.45 * Math.cos(THREE.MathUtils.degToRad(Math.min(89, wheel.theta))); }
+    for (let ch = 0; ch < 3; ch++)
+      for (let q = 0; q < 256; q++) lut[q * 3 + ch] = l2s((lb[ch] + (lf[ch] - lb[ch]) * q / 255) * dim);
+    wheel.lutCr = wheel.cr;
+    // same numbers to the 3D shader: on-axis CR and the dark state's tint normalised to unit luminance
+    aaMat.uniforms.uBg.value.set(lb[0], lb[1], lb[2]);
+    const Ld = lumY(ld); aaMat.uniforms.uDarkTint.value.set(ld[0] / Ld, ld[1] / Ld, ld[2] / Ld);
+    aaMat.uniforms.uCR0.value = lumY(lb) / Ld;
+  }
+  // contrast for an eye direction V in the panel frame (+X right, +Y toward 12 o'clock, +Z out of the glass): [θ°, '12/6/3/9', CR, behind]
+  function angleInfoFor(V) {
+    const th = THREE.MathUtils.radToDeg(Math.acos(Math.min(1, Math.abs(V.z))));
+    let dx = V.x, dy = V.y; const dl = Math.hypot(dx, dy) || 1; dx /= dl; dy /= dl; if (demoOpts.flip) dy = -dy;
+    const u = aaMat.uniforms, limY = dy > 0 ? u.uLimUp.value : u.uLimDown.value;
+    const lim = 1 / Math.sqrt(dx * dx / (u.uLimSide.value ** 2) + dy * dy / (limY * limY) || 1e-6);
+    const cr = Math.max(1, u.uCR0.value * Math.pow(2 / u.uCR0.value, (th / lim) ** 2));
+    const dir = Math.abs(dy) >= Math.abs(dx) ? (dy > 0 ? '12' : '6') : (dx > 0 ? '3' : '9');
+    return [th, dir, cr, V.z < 0];
+  }
+  function viewAngleInfo() {                                   // the 3D camera's view of the panel centre
+    const c = new THREE.Vector3(); aaPlane.getWorldPosition(c); return angleInfoFor(camera.position.clone().sub(c).normalize());
+  }
+  // ---- Wheel mode: the phone is the glass. Device orientation → screen normal; the eye direction is captured once. ----
+  function devRot(a, b, g) {                                   // W3C DeviceOrientation rotation matrix (device → world), rows
+    const cA = Math.cos(a), sA = Math.sin(a), cB = Math.cos(b), sB = Math.sin(b), cG = Math.cos(g), sG = Math.sin(g);
+    return [[cA * cG - sA * sB * sG, -cB * sA, cA * sG + cG * sA * sB], [cG * sA + cA * sB * sG, cA * cB, sA * sG - cA * cG * sB], [-cB * sG, sB, cB * cG]];
+  }
+  const angleEl = document.getElementById('angle');
+  const wheelRead = document.getElementById('wheelread'), gyroBtn = document.getElementById('gyroBtn'), eyeBtn = document.getElementById('eyeBtn'), wheelHint = document.getElementById('wheelhint');
+  function onOrient(e) {
+    if (e.alpha === null || e.beta === null) return;
+    wheel.R = devRot(THREE.MathUtils.degToRad(e.alpha), THREE.MathUtils.degToRad(e.beta), THREE.MathUtils.degToRad(e.gamma || 0));
+    wheel.lastEvent = performance.now();
+    if (!wheel.gyro) { wheel.gyro = true; eyeBtn.disabled = false; gyroBtn.textContent = 'Gyro on'; wheelRead.textContent = 'Tap Eye here while facing the phone'; }
+    if (!wheel.eye) return;
+    const R = wheel.R, E = wheel.eye;                          // eye direction in the device frame: Rᵀ·E
+    let x = R[0][0] * E[0] + R[1][0] * E[1] + R[2][0] * E[2], y = R[0][1] * E[0] + R[1][1] * E[1] + R[2][1] * E[2], z = R[0][2] * E[0] + R[1][2] * E[1] + R[2][2] * E[2];
+    const ang = (screen.orientation && screen.orientation.angle) || window.orientation || 0, ph = THREE.MathUtils.degToRad(ang);   // device axes → screen axes
+    const xs = x * Math.cos(ph) - y * Math.sin(ph), ys = x * Math.sin(ph) + y * Math.cos(ph);
+    const info = angleInfoFor(new THREE.Vector3(xs, ys, z));
+    wheel.theta = info[0]; wheel.dir = info[1]; wheel.cr = info[3] ? 1 : info[2]; wheel.behind = info[3];
+  }
+  gyroBtn.addEventListener('click', () => {
+    const go = () => {
+      window.addEventListener('deviceorientation', onOrient); window.addEventListener('deviceorientationabsolute', onOrient); gyroBtn.textContent = 'Waiting for gyro…';
+      setTimeout(() => { if (wheel.gyro) return;
+        let why = 'No orientation events.';
+        try { const fp = document.featurePolicy || document.permissionsPolicy; if (fp && fp.allowsFeature) why += fp.allowsFeature('gyroscope') ? ' The frame allows the gyroscope, so this browser is not sending them.' : ' This page is embedded in a frame that does not allow the gyroscope; no prompt can fix that.'; } catch (e) {}
+        why += ' Open wo240128a-3d.single.html from the zip on an HTTPS host (GitHub Pages) instead.';
+        wheelRead.textContent = why; }, 2500); };
+    if (typeof DeviceOrientationEvent !== 'undefined' && typeof DeviceOrientationEvent.requestPermission === 'function')
+      DeviceOrientationEvent.requestPermission().then(s => { if (s === 'granted') go(); else wheelRead.textContent = 'Motion access denied.'; }).catch(() => { wheelRead.textContent = 'Motion access denied.'; });
+    else go();
+  });
+  eyeBtn.addEventListener('click', () => {
+    if (!wheel.R) return; const R = wheel.R; wheel.eye = [R[0][2], R[1][2], R[2][2]];   // screen normal now = direction to the eye
+    wheelHint.textContent = 'Eye captured. Lay the phone on the wheel; tilt until the readout turns green. Flip "Mount 6 o\'clock up" to compare.';
+  });
   function updateLcd(dtMs) {
-    const bg = lcdBg(), dk = LCD.dark, fd = flatImg.data;
-    const aR = demo.fstn ? 1 - Math.exp(-dtMs / 110) : 1, aF = demo.fstn ? 1 - Math.exp(-dtMs / 170) : 1;
+    const fd = flatImg.data, tau = panelTau();
+    const aR = demo.fstn ? 1 - Math.exp(-dtMs / tau[0]) : 1, aF = demo.fstn ? 1 - Math.exp(-dtMs / tau[1]) : 1;
     const dx = shakeNow, dy = shakeNow ? (shakeNow > 0 ? -1 : 1) : 0;
     for (let y = 0; y < SH; y++) {
       const sy = Math.min(SH - 1, Math.max(0, y - dy)), trow = (SH - 1 - y) * TEXW * 4, frow = y * SW * 4;
       for (let x = 0; x < SW; x++) {
         const sx = Math.min(SW - 1, Math.max(0, x - dx)), i = y * SW + x, target = fb[sy * SW + sx];
         const v = lc[i] + (target - lc[i]) * (target > lc[i] ? aR : aF); lc[i] = v;
-        const r = bg[0] + (dk[0] - bg[0]) * v, g = bg[1] + (dk[1] - bg[1]) * v, b = bg[2] + (dk[2] - bg[2]) * v;
-        let o = trow + x * 4; dotData[o] = r; dotData[o + 1] = g; dotData[o + 2] = b; dotData[o + 3] = 255;
-        if (demoOpts.flat) { o = frow + x * 4; fd[o] = r; fd[o + 1] = g; fd[o + 2] = b; fd[o + 3] = 255; }
+        const qv = (v * 255 + 0.5) | 0;
+        let o = trow + x * 4; dotData[o] = qv; dotData[o + 1] = qv; dotData[o + 2] = qv; dotData[o + 3] = 255;   // transmittance; the shader colours it
+        if (demoOpts.flat) { const q = qv * 3; o = frow + x * 4; fd[o] = lut[q]; fd[o + 1] = lut[q + 1]; fd[o + 2] = lut[q + 2]; fd[o + 3] = 255; }
       }
     }
     dotTex.needsUpdate = true;
     if (demoOpts.flat) flatCtx.putImageData(flatImg, 0, 0);
   }
-  paintGapTile();
+  paintGapTile(); buildLut();
 
   // ------------------------------------------------------------------
   //  Camera / orbit (touch: one finger orbits, two fingers zoom + pan)
@@ -1198,7 +1573,8 @@ echo(str("Origin shift applied (", origin, "): ", origin_shift()));
     iso:    { theta: Math.PI / 2 - 0.85, phi: Math.PI / 2 - 0.55, sway: Math.PI / 2 - 0.25 },
     front:  { theta: Math.PI / 2, phi: Math.PI / 2 },
     back:   { theta: -Math.PI / 2, phi: Math.PI / 2 },
-    pins:   { theta: -Math.PI / 2 + 0.75, phi: Math.PI / 2 + 0.62 }
+    pins:   { theta: -Math.PI / 2 + 0.75, phi: Math.PI / 2 + 0.62 },
+    driver: { theta: Math.PI / 2, phi: Math.PI / 2 - 0.70 }        // looking down at a hub-mounted dash, ~40° from the normal toward 12 o'clock
   };
   const orb = { theta: VIEWS.iso.theta, phi: VIEWS.iso.phi, r: 300, target: new THREE.Vector3(0, 0, -3) };
   const goal = { theta: orb.theta, phi: orb.phi, r: orb.r, target: orb.target.clone() };
@@ -1212,10 +1588,14 @@ echo(str("Origin shift applied (", origin, "): ", origin_shift()));
   let swayT = 0;
   function setView(name, snap) {
     document.querySelectorAll('#views .chip').forEach(b => b.setAttribute('aria-pressed', String(b.dataset.view === name)));
-    if (name === 'flat') { demoOpts.flat = true; document.getElementById('flatwrap').hidden = false; canvas.hidden = true; hint.classList.add('gone'); currentView = name; return; }
-    demoOpts.flat = false; document.getElementById('flatwrap').hidden = true; canvas.hidden = false; currentView = name;
+    wheel.on = name === 'wheel'; viewer.classList.toggle('wheel', wheel.on);
+    if (wheel.on && !demoOpts.cr5) { const cb = document.getElementById('cr5'); cb.checked = true; cb.dispatchEvent(new Event('change')); }   // honest contrast for the real test
+    document.getElementById('wheelui').hidden = !wheel.on; angleEl.hidden = wheel.on;
+    if (name === 'flat' || name === 'wheel') { demoOpts.flat = true; document.getElementById('flatwrap').hidden = false; canvas.hidden = true; hint.classList.add('gone'); currentView = name; buildLut(); return; }
+    demoOpts.flat = false; document.getElementById('flatwrap').hidden = true; canvas.hidden = false; currentView = name; buildLut();
     const vw = VIEWS[name]; goal.theta = vw.theta; goal.phi = vw.phi; goal.r = fitRadius(); goal.target.set(0, 0, -3);
     camBase.theta = vw.sway !== undefined ? vw.sway : vw.theta; camBase.phi = vw.phi; swayT = 0;
+    if (name === 'driver' && state.cam !== 'still') setCam('still');     // the point of this view is a fixed eye position
     if (snap) { orb.theta = goal.theta; orb.phi = goal.phi; orb.r = goal.r; orb.target.copy(goal.target); }
   }
   function resize() {
@@ -1282,7 +1662,7 @@ echo(str("Origin shift applied (", origin, "): ", origin_shift()));
     if (o === 'outlines') G.outlines.visible = cb.checked;
     else if (o === 'edges') edgeLines.forEach(l => l.visible = cb.checked);
     else if (o === 'grid') grid.visible = cb.checked;
-    else if (o === 'backlight') { demoOpts.backlight = cb.checked; mat.lgp.emissiveIntensity = cb.checked ? 0.55 : 0; paintGapTile(); }
+    else if (o === 'backlight') { demoOpts.backlight = cb.checked; mat.lgp.emissiveIntensity = cb.checked ? 0.55 : 0; paintGapTile(); buildLut(); }
   }));
   document.getElementById('screens').addEventListener('click', e => {
     const b = e.target.closest('[data-screen]'); if (!b) return; demo.screen = b.dataset.screen;
@@ -1298,7 +1678,17 @@ echo(str("Origin shift applied (", origin, "): ", origin_shift()));
       while (sim.sectorIdx < 2) { sim.t = sim.sectorEnds[sim.sectorIdx]; endSector(now, 'normal'); }
       sim.t = sim.sectorEnds[2] + (sim.rng() - 0.5) * 800; endSector(now, 'auto'); endLap(now);
     }
-    else if (b.dataset.act === 'purple' && ui.mode === 'live') { const k = sim.sectorIdx; endSector(now, 'purple'); if (k === 2) endLap(now); }
+    else if (b.dataset.act === 'bestlap' && ui.mode === 'live') {       // a lap that beats the best by 0.15–0.45 s
+      while (sim.sectorIdx < 2) { sim.t = sim.sectorEnds[sim.sectorIdx]; endSector(now, 'normal'); }
+      sim.t = sim.bestLap - 150 - sim.rng() * 300; endSector(now, 'auto'); endLap(now);
+    }
+    else if (b.dataset.act === 'purple' && ui.mode === 'live') { const k = sim.sectorIdx; sim.t = Math.max(sim.t, sim.sectorEnds[k]); endSector(now, 'purple'); if (k === 2) endLap(now); }
+    else if (b.dataset.act === 'overheat' && ui.mode === 'live') { sim.egtBoost = 260; pushFx({ type: 'overheat', t0: now + 450 }); }
+  });
+  document.getElementById('themes').addEventListener('click', e => {
+    const b = e.target.closest('[data-theme]'); if (!b) return; ui.theme = b.dataset.theme; reboot();
+    document.querySelectorAll('#themes .chip').forEach(x => x.setAttribute('aria-pressed', String(x === b)));
+    if (demo.screen !== 'live') { demo.screen = 'live'; document.querySelectorAll('#screens .chip').forEach(x => x.setAttribute('aria-pressed', String(x.dataset.screen === 'live'))); }
   });
   const autoRun = document.getElementById('autoRun');
   autoRun.addEventListener('change', () => { sim.auto = autoRun.checked; sim.mul = autoRun.checked ? 4 : 1; autoRun.parentElement.classList.toggle('on', autoRun.checked); });
@@ -1308,6 +1698,19 @@ echo(str("Origin shift applied (", origin, "): ", origin_shift()));
   });
   const fstnCb = document.getElementById('fstn');
   fstnCb.addEventListener('change', () => { demo.fstn = fstnCb.checked; fstnCb.parentElement.classList.toggle('on', fstnCb.checked); });
+  const vangleCb = document.getElementById('vangle');
+  vangleCb.addEventListener('change', () => { aaMat.uniforms.uAngle.value = vangleCb.checked ? 1 : 0; vangleCb.parentElement.classList.toggle('on', vangleCb.checked); });
+  const flipCb = document.getElementById('flip');
+  flipCb.addEventListener('change', () => { demoOpts.flip = flipCb.checked; aaMat.uniforms.uFlip.value = flipCb.checked ? 1 : 0; flipCb.parentElement.classList.toggle('on', flipCb.checked); buildLut();
+    for (const m of [vaPlane, aaPlane, gapPlane]) m.rotation.z = flipCb.checked ? Math.PI : 0;   // image mirrored back upright, as the UC1608 would
+  });
+  let rollGoal = 0;
+  const cr5Cb = document.getElementById('cr5');
+  cr5Cb.addEventListener('change', () => { demoOpts.cr5 = cr5Cb.checked; cr5Cb.parentElement.classList.toggle('on', cr5Cb.checked); buildLut(); });
+  const tempEl = document.getElementById('temp'), tempVal = document.getElementById('tempVal');
+  function updateTempLabel() { const tau = panelTau(); tempVal.textContent = `${PANEL.tempC} °C · ${Math.round(tau[0] * LN9)}/${Math.round(tau[1] * LN9)} ms`; }
+  tempEl.addEventListener('input', () => { PANEL.tempC = parseInt(tempEl.value, 10); updateTempLabel(); });
+  updateTempLabel();
   const statEl = document.getElementById('stat');
 
   // ------------------------------------------------------------------
@@ -1327,7 +1730,7 @@ echo(str("Origin shift applied (", origin, "): ", origin_shift()));
   // ------------------------------------------------------------------
   const reduce = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
   if (reduce) setCam('still');
-  let running = true, lastT = 0, statT = 0;
+  let running = true, lastT = 0, statT = 0, angleT = 0;
   document.addEventListener('visibilitychange', () => { running = !document.hidden; if (running) { lastT = 0; requestAnimationFrame(frame); } });
   function frame(t) {
     if (!running) return;
@@ -1337,9 +1740,18 @@ echo(str("Origin shift applied (", origin, "): ", origin_shift()));
       let n = 0; while (demo.acc >= step && n < 8) { uiTick(step); demo.acc -= step; n++; }
       if (n === 8) demo.acc = 0;
     }
-    updateLcd(dt);
-    if (t - statT > 500) { statT = t; statEl.textContent = `${demo.fps} Hz · draw ${demo.renderMs.toFixed(2)} ms`; }
+    if (wheel.on && wheel.gyro && wheel.eye) {
+      if (Math.abs(wheel.cr - wheel.lutCr) > 0.05) buildLut();
+      if (t - angleT > 100) { angleT = t; const ok = wheel.cr >= 3, bad = wheel.cr < 2;
+        wheelRead.innerHTML = wheel.behind ? 'Eye is behind the glass' : `<b>${wheel.theta.toFixed(0)}°</b> toward ${wheel.dir} o'clock · CR <b>${wheel.cr.toFixed(1)}</b>${bad ? ' · unreadable' : ok ? ' · good' : ' · marginal'}`;
+        wheelRead.className = 'wheelread' + (bad ? ' bad' : ok ? ' good' : '');
+        if (performance.now() - wheel.lastEvent > 3000) wheelRead.textContent = 'Gyro stopped sending events';
+      }
+    }
+    const tl = performance.now(); updateLcd(dt); demo.lcdMs = demo.lcdMs * 0.9 + (performance.now() - tl) * 0.1;
+    if (t - statT > 500) { statT = t; statEl.textContent = `${demo.fps} Hz · JS here: draw ${demo.renderMs.toFixed(2)} ms, panel sim ${demo.lcdMs.toFixed(1)} ms`; }
     if (!demoOpts.flat) {
+      rollGoal = demoOpts.flip ? Math.PI : 0; pivot.rotation.z += (rollGoal - pivot.rotation.z) * (reduce ? 1 : 0.12);   // roll the board over
       if (state.cam === 'spin') goal.theta += 0.0035;
       else if (state.cam === 'sway') {                 // slow figure-of-eight around the base pose, never past ±0.7 rad of it
         swayT += dt; const a = swayT / 1000;
@@ -1352,6 +1764,7 @@ echo(str("Origin shift applied (", origin, "): ", origin_shift()));
       camera.position.set(orb.target.x + orb.r * sp * Math.cos(orb.theta), orb.target.y + orb.r * Math.cos(orb.phi), orb.target.z + orb.r * sp * Math.sin(orb.theta));
       camera.up.set(0, 1, 0); camera.lookAt(orb.target);
       renderer.render(scene, camera);
+      if (t - angleT > 150) { angleT = t; const a = viewAngleInfo(); angleEl.innerHTML = a[3] ? 'behind the glass' : (aaMat.uniforms.uAngle.value ? `<b>${a[0].toFixed(0)}°</b> toward ${a[1]} · CR <b>${a[2].toFixed(1)}</b>` : `<b>${a[0].toFixed(0)}°</b> toward ${a[1]}`); }
     }
     requestAnimationFrame(frame);
   }
