@@ -63,7 +63,7 @@ h1 small{font-family:var(--font-body);font-weight:400;font-size:.5em;color:var(-
 .ov-br{bottom:10px;right:10px}
 .ov-bl{bottom:16px;left:12px;right:200px;font-size:12px;color:var(--muted);transition:opacity .6s;font-family:var(--font-mono)}
 .ov-bl.gone{opacity:0}
-.ov-tr{top:48px;right:12px;font-size:12px;color:var(--muted);font-family:var(--font-mono);font-variant-numeric:tabular-nums;text-align:right;white-space:nowrap}
+.overlay > .ov-tr{flex-basis:100%;padding-right:2px;pointer-events:none;font-size:12px;color:var(--muted);font-family:var(--font-mono);font-variant-numeric:tabular-nums;text-align:right;white-space:nowrap}
 .ov-tr b{color:var(--fg);font-weight:500}
 .wheelui{position:absolute;left:12px;right:12px;bottom:12px;display:flex;flex-direction:column;gap:8px;align-items:flex-start}
 .wheelread{font-family:var(--font-mono);font-size:15px;font-variant-numeric:tabular-nums;color:var(--fg);background:var(--surface);border:1px solid var(--line);border-radius:8px;padding:6px 10px}
@@ -196,6 +196,7 @@ h1{border-left:4px solid var(--accent);padding-left:12px}
       <button class="chip" data-view="flat" aria-pressed="false">Flat</button>
       <button class="chip" data-view="wheel" aria-pressed="false">Wheel</button>
       <button class="chip act" id="realBtn" aria-haspopup="dialog">Actual size</button>
+      <div class="ov-tr" id="angle"></div>
     </div>
     <div class="overlay ov-br" id="cam">
       <button class="chip" data-cam="sway" aria-pressed="true">Sway</button>
@@ -203,7 +204,6 @@ h1{border-left:4px solid var(--accent);padding-left:12px}
       <button class="chip" data-cam="still" aria-pressed="false">Still</button>
     </div>
     <div class="overlay ov-bl" id="hint">drag · pinch to zoom</div>
-    <div class="overlay ov-tr" id="angle"></div>
     <div class="wheelui" id="wheelui" hidden>
       <div class="wheelread" id="wheelread">Gyro off</div>
       <div class="wheelbtns">
@@ -256,7 +256,7 @@ h1{border-left:4px solid var(--accent);padding-left:12px}
       <button class="chip act" data-act="bestlap">Best lap</button>
       <button class="chip act" data-act="purple">Purple sector</button>
       <button class="chip act" data-act="overheat">Overheat</button>
-      <label class="chip on"><input type="checkbox" id="autoRun" checked><span class="sw"></span>Session ×4</label>
+      <label class="chip"><input type="checkbox" id="autoRun"><span class="sw"></span>Session ×4</label>
     </div>
     <div class="row" id="rate">
       <span class="lbl">UI tick</span>
@@ -269,11 +269,11 @@ h1{border-left:4px solid var(--accent);padding-left:12px}
     <div class="row" id="panelrow">
       <span class="lbl">Panel</span>
       <label class="chip on"><input type="checkbox" id="fstn" checked><span class="sw"></span>FSTN response</label>
-      <label class="chip"><input type="checkbox" id="cr5"><span class="sw"></span>5:1 contrast</label>
+      <label class="chip on"><input type="checkbox" id="cr5" checked><span class="sw"></span>5:1 contrast</label>
       <label class="chip on"><input type="checkbox" id="vangle" checked><span class="sw"></span>Viewing angle</label>
       <label class="chip"><input type="checkbox" id="flip"><span class="sw"></span>Mount 6 o'clock up</label>
       <div class="slider">
-        <input type="range" id="temp" min="-20" max="70" step="1" value="25" aria-label="Panel temperature in degrees Celsius">
+        <input type="range" id="temp" min="-20" max="70" step="1" value="33" aria-label="Panel temperature in degrees Celsius">
         <span class="val" id="tempVal"></span>
       </div>
     </div>
@@ -301,13 +301,13 @@ h1{border-left:4px solid var(--accent);padding-left:12px}
       <label class="chip on"><input type="checkbox" data-part="led" checked><span class="sw"></span>LED pins</label>
       <label class="chip on"><input type="checkbox" data-part="pegs" checked><span class="sw"></span>Pegs</label>
       <label class="chip on"><input type="checkbox" data-part="chip" checked><span class="sw"></span>UC1608</label>
-      <label class="chip on"><input type="checkbox" data-part="tape" checked><span class="sw"></span>Pull tape</label>
+      <label class="chip"><input type="checkbox" data-part="tape"><span class="sw"></span>Pull tape</label>
     </div>
     <div class="row" id="opts">
       <span class="lbl">Show</span>
       <label class="chip"><input type="checkbox" data-opt="outlines"><span class="sw"></span>VA / AA outlines</label>
       <label class="chip on"><input type="checkbox" data-opt="edges" checked><span class="sw"></span>Edges</label>
-      <label class="chip on"><input type="checkbox" data-opt="backlight" checked><span class="sw"></span>Backlight</label>
+      <label class="chip"><input type="checkbox" data-opt="backlight"><span class="sw"></span>Backlight</label>
       <label class="chip on"><input type="checkbox" data-opt="grid" checked><span class="sw"></span>10 mm grid</label>
     </div>
   </div>
@@ -944,7 +944,7 @@ echo(str("Origin shift applied (", origin, "): ", origin_shift()));
   // ---- session simulation: a direct-drive kart lap, three sectors ----
   const SECTOR_BASE = [20100, 22300, 20100];
   const sim = {
-    mul: 4, auto: true, lap: 12, t: 24300, rpm: 9800, rpmT: 9800, topRpm: 14200, phase: 'accel', corners: [], nextCorner: 0, cornerMin: 7000,
+    mul: 1, auto: false, lap: 12, t: 24300, rpm: 9800, rpmT: 9800, topRpm: 14200, phase: 'accel', corners: [], nextCorner: 0, cornerMin: 7000,
     sectorIdx: 1, sectorStart: 20150, sectorEnds: [20150, 42400, 62500], bests: [20400, 22600, 20300], bestLap: 63300, lastLap: 63870,
     sectorState: ['done', 'current', 'pending'], completed: [20150, 0, 0], vbat: 12.4, sats: 12, sd: 61, peak: 0, peakT: 0, rng: mulberry32(7),
     delta: -430, trend: 0, egt: 1120, egtPeak: 1120, egtBoost: 0, water: 127, batt: 0.72
@@ -1521,12 +1521,12 @@ echo(str("Origin shift applied (", origin, "): ", origin_shift()));
   // ------------------------------------------------------------------
   const lc = new Float32Array(SW * SH);
   const flatCanvas = document.getElementById('flat'), flatCtx = flatCanvas.getContext('2d'), flatImg = flatCtx.createImageData(SW, SH);
-  const demoOpts = { backlight: true, flat: false, cr5: false };
+  const demoOpts = { backlight: false, flat: false, cr5: true };
   // Panel model. WO240128A-TFH datasheet: Tr 200 ms / Tf 250 ms typ (300 / 350 max), 10–90 %, 25 °C; CR 5 typ.
   // Each dot is a first-order lag; 10→90 % of a first-order step takes τ·ln 9, so τ = T/ln 9.
   // Temperature scales τ by an Arrhenius law for the LC rotational viscosity (Ea ≈ 30 kJ/mol):
   // about 3× slower at 0 °C, 9× at −20 °C, 0.4× at 50 °C. Not from the datasheet; fit it on the bench.
-  const PANEL = { trise: 200, tfall: 250, cr: 5, tempC: 25, eaOverR: 3600 };
+  const PANEL = { trise: 200, tfall: 250, cr: 5, tempC: 33, eaOverR: 3600 };   // datasheet times are at 25 °C; the page opens at 33 °C
   const LN9 = Math.log(9);
   function panelTau() {                                   // [τ to dark, τ to clear] in ms at PANEL.tempC
     const k = Math.exp(PANEL.eaOverR * (1 / (PANEL.tempC + 273.15) - 1 / 298.15));
@@ -1786,6 +1786,8 @@ echo(str("Origin shift applied (", origin, "): ", origin_shift()));
     else if (o === 'grid') grid.visible = cb.checked;
     else if (o === 'backlight') { demoOpts.backlight = cb.checked; mat.lgp.emissiveIntensity = cb.checked ? 0.55 : 0; paintGapTile(); buildLut(); }
   }));
+  // pull tape and backlight start off: run their handlers once so the scene matches the unchecked boxes
+  ['#parts [data-part="tape"]', '#opts [data-opt="backlight"]'].forEach(s => document.querySelector(s).dispatchEvent(new Event('change')));
   document.getElementById('screens').addEventListener('click', e => {
     const b = e.target.closest('[data-screen]'); if (!b) return; demo.screen = b.dataset.screen;
     document.querySelectorAll('#screens .chip').forEach(x => x.setAttribute('aria-pressed', String(x === b)));
