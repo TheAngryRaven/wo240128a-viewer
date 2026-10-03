@@ -1495,7 +1495,7 @@ echo(str("Origin shift applied (", origin, "): ", origin_shift()));
   const PHOTO_DARK = [89, 85, 114];     // dark state sampled from Winstar's WO240128A product photo: slate blue, not gray.
                                         // That photo measures 5.2:1 median (6.6:1 at the darkest dots), i.e. the datasheet panel.
   const lumY = rgb => 0.2126 * rgb[0] + 0.7152 * rgb[1] + 0.0722 * rgb[2];
-  const wheel = { on: false, gyro: false, eye: null, R: null, theta: 0, dir: '6', cr: 5, behind: false, lutCr: 0, lastEvent: 0 };
+  const wheel = { on: false, gyro: false, src: null, eye: null, R: null, theta: 0, dir: '6', cr: 5, behind: false, lutCr: 0, lastEvent: 0 };
   function buildLut() {
     const bg = lcdBg(), lb = bg.map(s2l);
     let ld = LCD.dark.map(s2l);
@@ -1532,6 +1532,10 @@ echo(str("Origin shift applied (", origin, "): ", origin_shift()));
   const wheelRead = document.getElementById('wheelread'), gyroBtn = document.getElementById('gyroBtn'), eyeBtn = document.getElementById('eyeBtn'), wheelHint = document.getElementById('wheelhint');
   function onOrient(e) {
     if (e.alpha === null || e.beta === null) return;
+    // Android sends two streams with different yaw zeros: 'deviceorientation' (gyro, arbitrary zero) and
+    // 'deviceorientationabsolute' (compass). Mixing them rotates the captured eye direction by the offset on
+    // every other event and the screen flashes, so lock onto the first stream that delivers and drop the other.
+    if (!wheel.src) wheel.src = e.type; else if (e.type !== wheel.src) return;
     wheel.R = devRot(THREE.MathUtils.degToRad(e.alpha), THREE.MathUtils.degToRad(e.beta), THREE.MathUtils.degToRad(e.gamma || 0));
     wheel.lastEvent = performance.now();
     if (!wheel.gyro) { wheel.gyro = true; eyeBtn.disabled = false; gyroBtn.textContent = 'Gyro on'; wheelRead.textContent = 'Tap Eye here while facing the phone'; }
@@ -1545,7 +1549,9 @@ echo(str("Origin shift applied (", origin, "): ", origin_shift()));
   }
   gyroBtn.addEventListener('click', () => {
     const go = () => {
-      window.addEventListener('deviceorientation', onOrient); window.addEventListener('deviceorientationabsolute', onOrient); gyroBtn.textContent = 'Waiting for gyro…';
+      // prefer the gyro-based relative stream: smooth, and no magnetometer jitter from the kart's steel; compass stream only as a fallback
+      window.addEventListener('deviceorientation', onOrient); gyroBtn.textContent = 'Waiting for gyro…';
+      setTimeout(() => { if (!wheel.src) window.addEventListener('deviceorientationabsolute', onOrient); }, 1000);
       setTimeout(() => { if (wheel.gyro) return;
         let why = 'No orientation events.';
         try { const fp = document.featurePolicy || document.permissionsPolicy; if (fp && fp.allowsFeature) why += fp.allowsFeature('gyroscope') ? ' The frame allows the gyroscope, so this browser is not sending them.' : ' This page is embedded in a frame that does not allow the gyroscope; no prompt can fix that.'; } catch (e) {}
