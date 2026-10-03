@@ -244,7 +244,7 @@ h1{border-left:4px solid var(--accent);padding-left:12px}
       <button class="chip act" data-act="bestlap">Best lap</button>
       <button class="chip act" data-act="purple">Purple sector</button>
       <button class="chip act" data-act="overheat">Overheat</button>
-      <label class="chip on"><input type="checkbox" id="autoRun" checked><span class="sw"></span>Session ×4</label>
+      <label class="chip"><input type="checkbox" id="autoRun"><span class="sw"></span>Session ×4</label>
     </div>
     <div class="row" id="rate">
       <span class="lbl">UI tick</span>
@@ -257,11 +257,11 @@ h1{border-left:4px solid var(--accent);padding-left:12px}
     <div class="row" id="panelrow">
       <span class="lbl">Panel</span>
       <label class="chip on"><input type="checkbox" id="fstn" checked><span class="sw"></span>FSTN response</label>
-      <label class="chip"><input type="checkbox" id="cr5"><span class="sw"></span>5:1 contrast</label>
+      <label class="chip on"><input type="checkbox" id="cr5" checked><span class="sw"></span>5:1 contrast</label>
       <label class="chip on"><input type="checkbox" id="vangle" checked><span class="sw"></span>Viewing angle</label>
       <label class="chip"><input type="checkbox" id="flip"><span class="sw"></span>Mount 6 o'clock up</label>
       <div class="slider">
-        <input type="range" id="temp" min="-20" max="70" step="1" value="25" aria-label="Panel temperature in degrees Celsius">
+        <input type="range" id="temp" min="-20" max="70" step="1" value="33" aria-label="Panel temperature in degrees Celsius">
         <span class="val" id="tempVal"></span>
       </div>
     </div>
@@ -932,7 +932,7 @@ echo(str("Origin shift applied (", origin, "): ", origin_shift()));
   // ---- session simulation: a direct-drive kart lap, three sectors ----
   const SECTOR_BASE = [20100, 22300, 20100];
   const sim = {
-    mul: 4, auto: true, lap: 12, t: 24300, rpm: 9800, rpmT: 9800, topRpm: 14200, phase: 'accel', corners: [], nextCorner: 0, cornerMin: 7000,
+    mul: 1, auto: false, lap: 12, t: 24300, rpm: 9800, rpmT: 9800, topRpm: 14200, phase: 'accel', corners: [], nextCorner: 0, cornerMin: 7000,
     sectorIdx: 1, sectorStart: 20150, sectorEnds: [20150, 42400, 62500], bests: [20400, 22600, 20300], bestLap: 63300, lastLap: 63870,
     sectorState: ['done', 'current', 'pending'], completed: [20150, 0, 0], vbat: 12.4, sats: 12, sd: 61, peak: 0, peakT: 0, rng: mulberry32(7),
     delta: -430, trend: 0, egt: 1120, egtPeak: 1120, egtBoost: 0, water: 127, batt: 0.72
@@ -1509,12 +1509,12 @@ echo(str("Origin shift applied (", origin, "): ", origin_shift()));
   // ------------------------------------------------------------------
   const lc = new Float32Array(SW * SH);
   const flatCanvas = document.getElementById('flat'), flatCtx = flatCanvas.getContext('2d'), flatImg = flatCtx.createImageData(SW, SH);
-  const demoOpts = { backlight: true, flat: false, cr5: false };
+  const demoOpts = { backlight: true, flat: false, cr5: true };
   // Panel model. WO240128A-TFH datasheet: Tr 200 ms / Tf 250 ms typ (300 / 350 max), 10–90 %, 25 °C; CR 5 typ.
   // Each dot is a first-order lag; 10→90 % of a first-order step takes τ·ln 9, so τ = T/ln 9.
   // Temperature scales τ by an Arrhenius law for the LC rotational viscosity (Ea ≈ 30 kJ/mol):
   // about 3× slower at 0 °C, 9× at −20 °C, 0.4× at 50 °C. Not from the datasheet; fit it on the bench.
-  const PANEL = { trise: 200, tfall: 250, cr: 5, tempC: 25, eaOverR: 3600 };
+  const PANEL = { trise: 200, tfall: 250, cr: 5, tempC: 33, eaOverR: 3600 };   // datasheet times are at 25 °C; the page opens at 33 °C
   const LN9 = Math.log(9);
   function panelTau() {                                   // [τ to dark, τ to clear] in ms at PANEL.tempC
     const k = Math.exp(PANEL.eaOverR * (1 / (PANEL.tempC + 273.15) - 1 / 298.15));
