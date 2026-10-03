@@ -64,6 +64,22 @@ h1 small{font-family:var(--font-body);font-weight:400;font-size:.5em;color:var(-
 .wheelhint{font-size:12px;color:var(--muted);max-width:60ch}
 .viewer.wheel .flatwrap{padding:52px 12px 150px}
 .viewer.wheel #cam{display:none}
+/* Actual size: the module drawn in millimetres at the calibrated CSS px per mm */
+.real{position:fixed;inset:0;z-index:50;background:var(--bg);display:flex;flex-direction:column;overflow:auto;overscroll-behavior:contain}
+.realbar{display:flex;flex-wrap:wrap;align-items:center;gap:8px 10px;padding:10px 16px;border-bottom:1px solid var(--line);background:var(--surface);position:sticky;top:0;left:0;z-index:1}
+.realtitle{font-family:var(--font-display);font-weight:700;font-size:16px}
+.realbar .stat{margin-right:auto}
+.realbar .stat.warn{color:var(--aa)}
+.realstage{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:14px;padding:24px 16px;min-width:max-content}
+.mod{position:relative;background:#f2f2ee;border-radius:2px;box-shadow:0 0 0 1px #9aa0a6,0 6px 20px rgba(0,0,0,.18)}
+.mod > *{position:absolute;display:block}
+.m-glass{background:#d9ece6;box-shadow:inset 0 0 0 1px rgba(0,0,0,.14)}
+.m-aa{image-rendering:pixelated;image-rendering:crisp-edges}
+.scalebar{display:flex;flex-direction:column;align-items:flex-start;gap:4px;font-family:var(--font-mono);font-size:12px;color:var(--muted)}
+.scalebar i{display:block;height:6px;border:1.5px solid var(--fg);border-top:0}
+.realcal{padding:14px 16px 18px;border-top:1px solid var(--line);background:var(--surface);display:flex;flex-direction:column;gap:12px;position:sticky;left:0}
+.realcal p{margin:0;font-size:14px;max-width:60ch}
+.card{border:2px dashed var(--accent);display:grid;place-items:center;color:var(--muted);font-family:var(--font-mono);font-size:13px;max-width:none}
 .fallback{position:absolute;inset:0;display:none;place-items:center;padding:24px;text-align:center;color:var(--muted)}
 .fallback.show{display:grid}
 
@@ -167,6 +183,7 @@ h1{border-left:4px solid var(--accent);padding-left:12px}
       <button class="chip" data-view="driver" aria-pressed="false">Driver</button>
       <button class="chip" data-view="flat" aria-pressed="false">Flat</button>
       <button class="chip" data-view="wheel" aria-pressed="false">Wheel</button>
+      <button class="chip act" id="realBtn" aria-haspopup="dialog">Actual size</button>
     </div>
     <div class="overlay ov-br" id="cam">
       <button class="chip" data-cam="sway" aria-pressed="true">Sway</button>
@@ -182,6 +199,34 @@ h1{border-left:4px solid var(--accent);padding-left:12px}
         <button class="chip" id="eyeBtn" disabled>Eye here</button>
       </div>
       <div class="wheelhint" id="wheelhint">Hold the phone square to your face, tap Eye here, then lay it on the wheel where the dash goes.</div>
+    </div>
+    <div class="real" id="real" role="dialog" aria-modal="true" aria-labelledby="realTitle" hidden>
+      <div class="realbar">
+        <span class="realtitle" id="realTitle">Actual size</span>
+        <span class="stat" id="realStat"></span>
+        <button class="chip" id="realCalBtn" aria-expanded="false">Calibrate</button>
+        <button class="chip" id="realClose">Close</button>
+      </div>
+      <div class="realstage">
+        <div class="mod" id="realMod">
+          <div class="m-glass" id="realGlass"></div>
+          <div id="realVA"></div>
+          <canvas class="m-aa" id="realAA" width="240" height="128" aria-label="The 240 by 128 display at its physical size"></canvas>
+        </div>
+        <div class="scalebar"><i id="realBar"></i><span>10 mm</span></div>
+      </div>
+      <div class="realcal" id="realCal" hidden>
+        <p>Hold a bank or ID card (85.60 mm wide) flat on the screen and drag until the dashed box is exactly as wide. Saved for this screen.</p>
+        <div class="card" id="realCard">85.60 mm</div>
+        <div class="slider">
+          <input type="range" id="realPx" min="1.5" max="12" step="0.01" aria-label="CSS pixels per millimetre">
+          <span class="val" id="realPxVal"></span>
+        </div>
+        <div class="row">
+          <button class="chip" id="realSave">Done</button>
+          <button class="chip" id="realReset">Forget calibration</button>
+        </div>
+      </div>
     </div>
     <div class="fallback" id="fallback">The 3D library did not load. Check the connection and reload the page.</div>
   </div>
@@ -1553,10 +1598,68 @@ echo(str("Origin shift applied (", origin, "): ", origin_shift()));
     if (!wheel.R) return; const R = wheel.R; wheel.eye = [R[0][2], R[1][2], R[2][2]];   // screen normal now = direction to the eye
     wheelHint.textContent = 'Eye captured. Lay the phone on the wheel; tilt until the readout turns green. Flip "Mount 6 o\'clock up" to compare.';
   });
+  // ---- Actual size. Browsers don't expose physical DPI (a CSS inch is always 96 px), so: estimate from the device
+  //      class, then let the user match a bank card (ISO/IEC 7810 ID-1, 85.60 mm). Stored as *device* px per mm keyed
+  //      by the screen's device-pixel size, so desktop browser zoom (which changes devicePixelRatio) stays correct.
+  const realEl = document.getElementById('real'), realBtn = document.getElementById('realBtn'), realStat = document.getElementById('realStat');
+  const realAA = document.getElementById('realAA'), realCtx = realAA.getContext('2d');
+  const realCal = document.getElementById('realCal'), realCalBtn = document.getElementById('realCalBtn'), realPx = document.getElementById('realPx'), realPxVal = document.getElementById('realPxVal');
+  const CARD_MM = 85.60, CARD_H_MM = 53.98;
+  const real = { on: false, ppm: 0, calibrated: false };
+  function realKey() {
+    const d = window.devicePixelRatio || 1, a = Math.round(screen.width * d), b = Math.round(screen.height * d);
+    return 'wo240128a.devPxPerMm.' + Math.min(a, b) + 'x' + Math.max(a, b);
+  }
+  function estimatePpm() {                                     // CSS px per mm, by device class
+    const coarse = window.matchMedia('(pointer: coarse)').matches, short = Math.min(screen.width, screen.height);
+    if (coarse && short < 600) return 6.1;                     // phones: about 150–165 CSS px per inch
+    if (coarse) return 5.2;                                    // tablets: about 130
+    return 96 / 25.4;                                          // desktop: the CSS reference inch; real monitors run 3.5–4.5
+  }
+  function realLoad() {
+    let v = null; try { v = parseFloat(localStorage.getItem(realKey())); } catch (e) {}
+    real.calibrated = v > 0; real.ppm = real.calibrated ? v / (window.devicePixelRatio || 1) : estimatePpm();
+  }
+  function realLayout() {
+    const k = real.ppm, place = (el, x, y, w, h) => { el.style.left = x * k + 'px'; el.style.top = y * k + 'px'; el.style.width = w * k + 'px'; el.style.height = h * k + 'px'; };
+    const mod = document.getElementById('realMod'); mod.style.width = P.lb_w * k + 'px'; mod.style.height = P.lb_h * k + 'px';
+    place(document.getElementById('realGlass'), D.lcd_x0, (P.lb_h - P.lcd_h) / 2, P.lcd_w, P.lcd_h);
+    const va = document.getElementById('realVA'); place(va, P.va_x0, P.va_ytop, P.va_w, P.va_h); va.style.background = `rgb(${lut[0]},${lut[1]},${lut[2]})`;
+    place(realAA, P.aa_x0, P.aa_ytop, P.aa_w, P.aa_h);
+    document.getElementById('realBar').style.width = 10 * k + 'px';
+    const card = document.getElementById('realCard'); card.style.width = CARD_MM * k + 'px'; card.style.height = CARD_H_MM * k + 'px'; card.style.borderRadius = 3.18 * k + 'px';
+    realPx.value = k.toFixed(2); realPxVal.textContent = k.toFixed(2) + ' px/mm';
+    const zoomed = window.visualViewport && window.visualViewport.scale > 1.01, tooWide = P.lb_w * k > window.innerWidth - 32;
+    realStat.textContent = `1 mm = ${k.toFixed(2)} px · ${real.calibrated ? 'calibrated' : 'estimated, calibrate for accuracy'}`
+      + (zoomed ? ' · pinch-zoomed, zoom back out' : tooWide ? ' · wider than the window, turn the phone sideways' : '');
+    realStat.classList.toggle('warn', zoomed || tooWide || !real.calibrated);
+  }
+  function realOpen() {
+    realLoad(); real.on = true; realEl.hidden = false; document.body.style.overflow = 'hidden';
+    if (!demoOpts.flat) buildLut();
+    realLayout(); document.getElementById('realClose').focus();
+  }
+  function realClose() {
+    real.on = false; realEl.hidden = true; realCal.hidden = true; realCalBtn.setAttribute('aria-expanded', 'false');
+    document.body.style.overflow = ''; realBtn.focus();
+  }
+  realBtn.addEventListener('click', realOpen);
+  document.getElementById('realClose').addEventListener('click', realClose);
+  realEl.addEventListener('keydown', e => { if (e.key === 'Escape') { e.preventDefault(); realClose(); } });
+  realCalBtn.addEventListener('click', () => { realCal.hidden = !realCal.hidden; realCalBtn.setAttribute('aria-expanded', String(!realCal.hidden)); if (!realCal.hidden) realCal.scrollIntoView({ block: 'nearest' }); });
+  realPx.addEventListener('input', () => { real.ppm = parseFloat(realPx.value); realLayout(); });
+  document.getElementById('realSave').addEventListener('click', () => {
+    try { localStorage.setItem(realKey(), String(real.ppm * (window.devicePixelRatio || 1))); real.calibrated = true; } catch (e) {}
+    realCal.hidden = true; realCalBtn.setAttribute('aria-expanded', 'false'); realLayout();
+  });
+  document.getElementById('realReset').addEventListener('click', () => { try { localStorage.removeItem(realKey()); } catch (e) {} realLoad(); realLayout(); });
+  window.addEventListener('resize', () => { if (!real.on) return; if (!real.calibrated) real.ppm = estimatePpm(); else realLoad(); realLayout(); });
+  if (window.visualViewport) window.visualViewport.addEventListener('resize', () => { if (real.on) realLayout(); });
+
   function updateLcd(dtMs) {
     const fd = flatImg.data, tau = panelTau();
     const aR = demo.fstn ? 1 - Math.exp(-dtMs / tau[0]) : 1, aF = demo.fstn ? 1 - Math.exp(-dtMs / tau[1]) : 1;
-    const dx = shakeNow, dy = shakeNow ? (shakeNow > 0 ? -1 : 1) : 0;
+    const dx = shakeNow, dy = shakeNow ? (shakeNow > 0 ? -1 : 1) : 0, flat = demoOpts.flat || real.on;
     for (let y = 0; y < SH; y++) {
       const sy = Math.min(SH - 1, Math.max(0, y - dy)), trow = (SH - 1 - y) * TEXW * 4, frow = y * SW * 4;
       for (let x = 0; x < SW; x++) {
@@ -1564,11 +1667,12 @@ echo(str("Origin shift applied (", origin, "): ", origin_shift()));
         const v = lc[i] + (target - lc[i]) * (target > lc[i] ? aR : aF); lc[i] = v;
         const qv = (v * 255 + 0.5) | 0;
         let o = trow + x * 4; dotData[o] = qv; dotData[o + 1] = qv; dotData[o + 2] = qv; dotData[o + 3] = 255;   // transmittance; the shader colours it
-        if (demoOpts.flat) { const q = qv * 3; o = frow + x * 4; fd[o] = lut[q]; fd[o + 1] = lut[q + 1]; fd[o + 2] = lut[q + 2]; fd[o + 3] = 255; }
+        if (flat) { const q = qv * 3; o = frow + x * 4; fd[o] = lut[q]; fd[o + 1] = lut[q + 1]; fd[o + 2] = lut[q + 2]; fd[o + 3] = 255; }
       }
     }
     dotTex.needsUpdate = true;
     if (demoOpts.flat) flatCtx.putImageData(flatImg, 0, 0);
+    if (real.on) realCtx.putImageData(flatImg, 0, 0);
   }
   paintGapTile(); buildLut();
 
@@ -1593,7 +1697,7 @@ echo(str("Origin shift applied (", origin, "): ", origin_shift()));
   const camBase = { theta: VIEWS.iso.theta, phi: VIEWS.iso.phi };   // pose the sway oscillates around
   let swayT = 0;
   function setView(name, snap) {
-    document.querySelectorAll('#views .chip').forEach(b => b.setAttribute('aria-pressed', String(b.dataset.view === name)));
+    document.querySelectorAll('#views [data-view]').forEach(b => b.setAttribute('aria-pressed', String(b.dataset.view === name)));
     wheel.on = name === 'wheel'; viewer.classList.toggle('wheel', wheel.on);
     if (wheel.on && !demoOpts.cr5) { const cb = document.getElementById('cr5'); cb.checked = true; cb.dispatchEvent(new Event('change')); }   // honest contrast for the real test
     document.getElementById('wheelui').hidden = !wheel.on; angleEl.hidden = wheel.on;

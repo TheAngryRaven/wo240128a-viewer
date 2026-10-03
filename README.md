@@ -13,6 +13,15 @@ two stay in step.
 
 Fonts come from Google Fonts when online and fall back to system fonts otherwise.
 
+## Actual size
+
+**Actual size** (in the view chips) draws the module outline, glass, VA and the live AA at
+physical millimetres. Browsers don't report real DPI (a CSS inch is always 96 px), so it
+starts from an estimate by device class (phone 6.1, tablet 5.2, desktop 3.78 CSS px/mm)
+and **Calibrate** matches a bank card (85.60 mm). The result is stored in `localStorage`
+as device px per mm, keyed by the screen's device-pixel size, so desktop browser zoom
+stays correct. Pinch-zoom on a phone breaks the scale; the bar says so.
+
 ## GitHub Pages
 
 `.github/workflows/pages.yml` rebuilds the pages from `src/` on every push to `main` and
