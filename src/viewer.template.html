@@ -326,7 +326,7 @@ h1{border-left:4px solid var(--accent);padding-left:12px}
     <p><b>The panel row:</b> each dot is a first-order lag with time constants set from those datasheet figures, scaled with temperature by an Arrhenius law for the liquid crystal's viscosity (about 3× slower at 0 °C, 9× at −20 °C, 0.4× at 50 °C; the temperature law is a textbook estimate, not a Winstar figure), and mixed in linear light. "5:1 contrast" renders the datasheet's typical contrast ratio instead of ink black, with the dark state's slate-blue tint sampled from Winstar's product photo of this module, which itself measures about 5:1. "Viewing angle" fades contrast with the angle between your eye and the glass using the datasheet's CR ≥ 2 limits (30° toward 12 o'clock, 60° toward 6, 45° sideways; the fall-off curve between those points is a guess), and the readout in the corner gives the angle and the contrast at the panel centre. "Mount 6 o'clock up" is the trick of fitting the glass rotated 180° and mirroring the image in the UC1608, so the strong side faces a driver looking down at the dash: compare the Driver view with it on and off. The stat is JavaScript time on this device: the raster into the framebuffer, and the panel simulation, which is the expensive part here and does not exist on the device.</p>
     <p>The session runs a simulated direct-drive 2T kart lap with three sectors (Session ×4 runs it at 4× and fires sectors and laps by itself), EGT that follows load with a lag, and water that creeps. Three themes share the core and the events, and render them differently:</p>
     <ul>
-      <li><b>Thermal</b> puts the temperatures first, for a 2T kart where the rev limiter is heard (or set on the LEDs): EGT and water each get a 32-px number and a thick bar with the target band as notches, a peak flag, a trend arrow and COLD / HIGH / HOT, and the whole panel flips at the warning temperature. A solid lap counter with 42-px digits and sector boxes sits between them, RPM is a sweep trace (a write head draws each column once per 6-s sweep, so the slow glass never has to scroll), and the status bar carries only the last lap and the race clock. Drawn for the glass: no line thinner than 2 px, motion in blocks that step and hold, numbers held for 400 ms so the glass settles on each one, alarms at 1.25 Hz, impact as whole-screen flashes and a 2-px shake. Boot: the logo fills with heat from the bottom in six steps, a flash, the name and a four-chunk heat bar, shutters close and open onto the dash, the gauges sweep. Sector: a card opens over the trace in three steps, holds, and closes back to the centre the same way. Purple: two flashes, a shake, a framed card. Lap: the counter rolls in three steps on a white panel and the last-lap half of the status bar flips. Best lap: four frames step out from the centre, a full card with the time and the gain, then the count rolls. <b>Grip loss</b> (stand-in for the NPU's tyre-wear model): hazard stripes wipe across the trace, then a skidding tyre, GRIP % and a 6-block meter; the side LEDs breathe amber.</li>
+      <li><b>Thermal</b> puts the temperatures first, for a 2T kart where the rev limiter is heard (or set on the LEDs): EGT and water each get a 32-px number and a thick bar with the target band as notches, a peak flag, a trend arrow and COLD / HIGH / HOT, and the whole panel flips at the warning temperature. A solid lap counter with 42-px digits and sector boxes sits between them, RPM is an 18-segment bar across the middle (500 rpm a segment from 6,000; slanted like the logotype and stepping up in height, so it reads by length at a glance; unlit segments keep a stub, the shift zone from 13,500 is outlined, a peak cap holds then falls, and the band flips past 14,500), and the status bar carries only the last lap and the race clock. Drawn for the glass: no line thinner than 2 px, motion in blocks that step and hold, numbers held for 400 ms so the glass settles on each one, alarms at 1.25 Hz, impact as whole-screen flashes and a 2-px shake. Boot: the logo fills with heat from the bottom in six steps, a flash, the name and a four-chunk heat bar, shutters close and open onto the dash, the gauges sweep. Sector: a card opens over the RPM bar in three steps, holds, and closes back to the centre the same way. Purple: two flashes, a shake, a framed card. Lap: the counter rolls in three steps on a white panel and the last-lap half of the status bar flips. Best lap: four frames step out from the centre, a full card with the time and the gain, then the count rolls. <b>Grip loss</b> (stand-in for the NPU's tyre-wear model): hazard stripes wipe across the RPM bar, then a skidding tyre, GRIP % and a 6-block meter; the side LEDs breathe amber.</li>
       <li><b>Timekeeper</b> is time-centric: big lap time, sector boxes in the header. Boot: logo spin-in, name, fly-to-header, gauge sweep, dissolve. Purple: strobe, 1-px shake, badge, sparkles. Best lap: banner.</li>
       <li><b>Pace</b> is for the driver mid-session: a 32-block RPM ladder, a 56-px RPM number, pace delta with trend, EGT and water thermometers with their target bands at the edges, lap times demoted to one strip, an icon row. Boot: the logo coalesces from a swarm of 860 particles, the name bounces in, a CRT collapse to a line, the dash CRT-expands, ladder self-test, slot-machine digits. Purple: row glitch, diagonal sweep, a sector chip drops from the ladder. Best lap: expanding rings, a checkered flag waves through the lap strip, the time slams in. Overheat: the EGT bar blinks, a warning chip drops, a flame joins the icon row.</li>
     </ul>
@@ -1071,16 +1071,18 @@ h1{border-left:4px solid var(--accent);padding-left:12px}
     drawLadder(now, ui.rpmShown); drawGiantRpm(now, ui.rpmShown); drawVitals(now); drawPaceRow(now, ui.rpmShown); drawLapStrip(now); drawIconRow(now); drawFxB(now);
   }
   // ==================================================================
-  //  Theme C — "Thermal": temperatures first, a lap counter you can read at speed, RPM as a sweep trace,
+  //  Theme C — "Thermal": temperatures first, a lap counter you can read at speed, RPM as a segmented bar,
   //  only the last lap and the race clock in the status bar. Drawn for the glass (~150–180 ms to switch):
   //  strokes ≥ 2 px, anything read on the move ≥ 14 px tall, motion in big blocks that step ≥ 80 ms
   //  and hold, numbers held for 400 ms, impact as whole-screen inversions and a 2-px shake, alarms at 1.25 Hz.
+  //  Middle band (THP.midY): the RPM bar, overlaid by sector / purple cards and replaced by the grip panel.
   // ==================================================================
   const THP = { egtX: 0, h2oX: 152, w: 88, lapX: 92, lapW: 56, midY: 76, midH: 28, statusY: 106 };
-  const TH = { trace: new Uint8Array(80), head: 0, next: 0, lastNow: 0, egtPrev: 0, h2oPrev: 0, egtRate: 0, h2oRate: 0, showT: -1e9, egt: 0, h2o: 0, rpm: 0, grip: 0.96 };
-  const TH_SHIFT = 13500, TH_SAMPLE = 75;                          // RPM sweep: 80 samples × 75 ms = 6 s per sweep
+  const TH = { lastNow: 0, egtPrev: 0, h2oPrev: 0, egtRate: 0, h2oRate: 0, showT: -1e9, egt: 0, h2o: 0, grip: 0.96, lit: 0, peak: 0, peakT: 0 };
+  // RPM bar: 18 slanted segments, 500 rpm each from 6,000; heights step up left to right; the last three are the shift zone
+  const RPMB = { x: 3, n: 18, w: 11, gap: 2, slant: 4, base: 95, h0: 8, h1: 19, min: 6000, step: 500, shift: 15, over: 14500 };
   const TH_HOLD = 400, TH_BLINK = 400;                             // shown values change ≤ 2.5×/s and alarms blink at 1.25 Hz, so the glass settles
-  function thermalReset() { TH.trace.fill(0); TH.head = 0; TH.next = 0; TH.egtPrev = sim.egt; TH.h2oPrev = sim.water; TH.egtRate = TH.h2oRate = 0; TH.showT = -1e9; }
+  function thermalReset() { TH.lit = TH.peak = 0; TH.egtPrev = sim.egt; TH.h2oPrev = sim.water; TH.egtRate = TH.h2oRate = 0; TH.showT = -1e9; }
   function fbDisk(cx, cy, r, v) { for (let y = -r; y <= r; y++) { const w = Math.floor(Math.sqrt(r * r - y * y + r)); fbFill(cx - w, cy + y, 2 * w + 1, 1, v); } }
   function fbFrame(x, y, w, h, t, v) { fbFill(x, y, w, t, v); fbFill(x, y + h - t, w, t, v); fbFill(x, y, t, h, v); fbFill(x + w - t, y, t, h, v); }
   function cardWidth(a, life) {                                  // cards open and close about the centre in thirds, 80 ms a step
@@ -1124,19 +1126,29 @@ h1{border-left:4px solid var(--accent);padding-left:12px}
     }
     if (e && a >= 0 && a < 600) fbInvert(x, 0, w, 72);
   }
-  // ---- RPM sweep: bars written at a moving head with a gap ahead of it; each column changes once per sweep ----
-  function thermalSample(now) {
-    if (now - TH.next > 2000) TH.next = now;                      // after a pause, start again rather than backfill
-    while (now >= TH.next) { TH.trace[TH.head] = Math.round(22 * clamp01((sim.rpm - 6000) / 9000)); TH.head = (TH.head + 1) % 80; TH.next += TH_SAMPLE; }
+  // ---- RPM bar: read by length (and height); lit segments solid, unlit a stub, shift zone outlined, a peak cap that falls ----
+  const rpmSegX = i => RPMB.x + i * (RPMB.w + RPMB.gap);
+  const rpmSegH = i => RPMB.h0 + Math.round((RPMB.h1 - RPMB.h0) * i / (RPMB.n - 1));
+  function rpmSeg(i, mode) {                                      // mode: 'lit' | 'stub' (bottom 3 rows) | 'frame' (2-px outline) | 'cap' (top 4 rows)
+    const x = rpmSegX(i), h = rpmSegH(i), top = RPMB.base - h + 1;
+    for (let r = 0; r < h; r++) {
+      const y = top + r, off = Math.round(RPMB.slant * (RPMB.base - y) / (RPMB.h1 - 1));   // same slant on every segment
+      if (mode === 'lit' || (mode === 'stub' && r >= h - 3) || (mode === 'cap' && r < 4) || (mode === 'frame' && (r < 2 || r >= h - 2))) fbFill(x + off, y, RPMB.w, 1, 1);
+      else if (mode === 'frame') { fbFill(x + off, y, 2, 1, 1); fbFill(x + off + RPMB.w - 2, y, 2, 1, 1); }
+    }
   }
-  function drawTraceC() {
-    const y = THP.midY, base = y + 25;
-    for (let i = 0; i < 80; i++) { if ((i - TH.head + 80) % 80 < 2) continue; const v = TH.trace[i]; if (v) fbFill(i * 3, base - v, 2, v, 1); }
-    fbFill(0, base + 1, SW, 2, 1);
-    const sy = base - Math.round(22 * clamp01((TH_SHIFT - 6000) / 9000));
-    for (let x = 0; x < SW; x += 8) fbInvert(x, sy, 4, 2);        // shift point, dashed, readable over the bars
-    const tag = 'RPM ' + (TH.rpm / 1000).toFixed(1), tw2 = width57(tag, 1) + 6;
-    fbFill(SW - tw2, y, tw2, 10, 1); text57(SW - tw2 + 3, y + 2, tag, 0);
+  function updateRpmBarC(now) {                                   // lit count with 100 rpm of hysteresis, so a boundary doesn't flicker
+    const t = Math.max(0, Math.min(RPMB.n, (sim.rpm - RPMB.min) / RPMB.step));
+    if (t >= TH.lit + 1.2) TH.lit = Math.min(RPMB.n, Math.floor(t - 0.2)); else if (t < TH.lit - 0.2) TH.lit = Math.max(0, Math.floor(t + 0.2));
+    if (TH.lit >= TH.peak) { TH.peak = TH.lit; TH.peakT = now; }
+    else if (now - TH.peakT > 700) { TH.peak--; TH.peakT = now - 580; }   // hold 0.7 s, then fall a segment every 120 ms
+  }
+  function drawRpmBarC(now, litOverride) {
+    const lit = litOverride !== undefined ? litOverride : TH.lit, peak = litOverride !== undefined ? 0 : TH.peak;
+    for (let i = 0; i < RPMB.n; i++) rpmSeg(i, i < lit ? 'lit' : i === peak - 1 ? 'cap' : i >= RPMB.shift ? 'frame' : 'stub');
+    for (const k of [6, 8, 10, 12, 14]) { const s = String(k); text57(Math.max(0, rpmSegX((k * 1000 - RPMB.min) / RPMB.step) - (width57(s, 1) >> 1) - 1), RPMB.base + 2, s, 1); }
+    text57(SW - width57('RPM', 1), RPMB.base + 2, 'RPM', 1);
+    if (litOverride === undefined && sim.rpm >= RPMB.over && ((now / TH_BLINK) | 0) & 1) fbInvert(0, THP.midY, SW, RPMB.base - THP.midY + 1);   // over-rev: the band flips
   }
   // ---- grip: hazard stripes wipe in, then a skidding tyre, GRIP %, a 6-block meter; GRIP OK on the way out ----
   function drawTyre(cx, cy, step, v) {
@@ -1156,13 +1168,13 @@ h1{border-left:4px solid var(--accent);padding-left:12px}
   function drawMidC(now) {
     let e = null; for (const q of fx) if (q.type === 'grip') e = q;   // newest grip change
     const a = e ? now - e.t0 : Infinity, y = THP.midY, h = THP.midH;
-    if (sim.gripLoss && e && e.on && a < 480) {                     // stripes cover the trace from the right in four steps
-      drawTraceC(); const x0 = SW - 60 * Math.min(4, Math.floor(a / 120) + 1);
+    if (sim.gripLoss && e && e.on && a < 480) {                     // stripes cover the RPM bar from the right in four steps
+      drawRpmBarC(now); const x0 = SW - 60 * Math.min(4, Math.floor(a / 120) + 1);
       for (let yy = y; yy < y + h; yy++) for (let xx = Math.max(0, x0); xx < SW; xx++) fb[yy * SW + xx] = (((xx + yy) / 6) | 0) & 1;
     } else if (sim.gripLoss) drawGripC(now, TH.grip, false);
-    else if (e && !e.on && a < 840) {                               // back: GRIP OK, then it closes to the centre over the trace
-      drawTraceC(); clipCard(y, h, a < 600 ? SW : cardWidth(a - 360, 480)); drawGripC(now, 1, true); resetClip();
-    } else drawTraceC();
+    else if (e && !e.on && a < 840) {                               // back: GRIP OK, then it closes to the centre over the bar
+      drawRpmBarC(now); clipCard(y, h, a < 600 ? SW : cardWidth(a - 360, 480)); drawGripC(now, 1, true); resetClip();
+    } else drawRpmBarC(now);
   }
   // ---- status bar: last lap and race clock only, 16-px digits on solid black ----
   function drawStatusC(now) {
@@ -1176,7 +1188,7 @@ h1{border-left:4px solid var(--accent);padding-left:12px}
     segText(SW - 4, y + 3, 16, fmtRace(sim.race), 0, 'right');
     if (e && a < 600) fbInvert(0, y, 122, 22);                     // a fresh lap: that half flips white
   }
-  // ---- cards: sector (S2 +0.24) and purple open and close in three steps over the trace; best lap takes the screen ----
+  // ---- cards: sector (S2 +0.24) and purple open and close in three steps over the RPM bar; best lap takes the screen ----
   function drawSectorCardC(now, e) {
     const a = now - e.t0, purple = e.type === 'purple', life = purple ? 1800 : 1500, y = THP.midY, h = THP.midH;
     clipCard(y, h, cardWidth(a, life));
@@ -1243,7 +1255,9 @@ h1{border-left:4px solid var(--accent);padding-left:12px}
     drawTempC(THP.egtX, 'EGT', sweep(EGT, sim.egt), undefined, EGT, 0, now, true);
     drawTempC(THP.h2oX, 'H2O', sweep(H2O, sim.water), undefined, H2O, 0, now, true);
     drawLapC(now, a2 < 900 ? '--' : String(sim.lap));
-    TH.rpm = sim.rpm; thermalSample(now); drawTraceC(); drawStatusC(now);
+    const frac = Math.max(0, Math.min(1, (sim.rpm - RPMB.min) / (RPMB.n * RPMB.step)));   // self-test: the bar sweeps full and settles
+    drawRpmBarC(now, Math.round(RPMB.n * (a2 < 500 ? ease.inOutCubic(a2 / 500) : a2 < 1000 ? 1 + (frac - 1) * ease.inOutCubic((a2 - 500) / 500) : frac)));
+    drawStatusC(now);
     const open = Math.floor(a2 / 40) + 1; if (open < 8) fbFill(0, 0, SW, 16 * (8 - open), 1);   // shutters open, bottom first
     if (a2 >= 1300) ui.mode = 'live';
   }
@@ -1251,8 +1265,8 @@ h1{border-left:4px solid var(--accent);padding-left:12px}
     const dt = Math.max(1, now - TH.lastNow) / 1000; TH.lastNow = now;
     TH.egtRate += ((sim.egt - TH.egtPrev) / dt - TH.egtRate) * 0.1; TH.egtPrev = sim.egt;
     TH.h2oRate += ((sim.water - TH.h2oPrev) / dt - TH.h2oRate) * 0.1; TH.h2oPrev = sim.water;
-    if (now - TH.showT >= TH_HOLD) { TH.showT = now; TH.egt = sim.egt; TH.h2o = sim.water; TH.rpm = sim.rpm; TH.grip = sim.grip; }
-    thermalSample(now);
+    if (now - TH.showT >= TH_HOLD) { TH.showT = now; TH.egt = sim.egt; TH.h2o = sim.water; TH.grip = sim.grip; }
+    updateRpmBarC(now);
     drawTempC(THP.egtX, 'EGT', TH.egt, sim.egtPeak, EGT, TH.egtRate, now);
     drawTempC(THP.h2oX, 'H2O', TH.h2o, undefined, H2O, TH.h2oRate, now);
     drawLapC(now); drawMidC(now); drawStatusC(now); drawFxC(now);
