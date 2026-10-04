@@ -157,8 +157,9 @@ layout inside `fbFill`/`fbPx`, and emit `F57` and `LOGO_SRC` as `const uint8_t[]
   frame's rear face) and are children of the scene rather than the module, so they stay
   put for the 6 o'clock mount, except that the side columns follow the AA, which rolls to
   the other half; they move with the pins in the exploded view. `ledLayout` places and
-  scales the meshes and redraws the CAD-style pitch dimension between top positions 3 and
-  4 (`buildLedDims`, toggled by "LED pitch" in Show). `ledShow` turns `LED.buf` into lens
+  scales the meshes and redraws the CAD-style dimensions (`dimension`, `buildLedDims`,
+  toggled by "LED dimensions" in Show): the top-row pitch between positions 3 and 4, and each
+  gap in the left column (where the buttons go). `ledShow` turns `LED.buf` into lens
   colour, a halo sprite, a glint sprite above ~86 % of the commanded level, and five point
   lights (thirds of the top row, one per side column). Actual size draws the same LEDs.
 

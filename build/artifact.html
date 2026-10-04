@@ -313,7 +313,7 @@ h1{border-left:4px solid var(--accent);padding-left:12px}
       <label class="chip on"><input type="checkbox" data-opt="edges" checked><span class="sw"></span>Edges</label>
       <label class="chip"><input type="checkbox" data-opt="backlight"><span class="sw"></span>Backlight</label>
       <label class="chip on"><input type="checkbox" data-opt="grid" checked><span class="sw"></span>10 mm grid</label>
-      <label class="chip on"><input type="checkbox" data-opt="ledDims" checked><span class="sw"></span>LED pitch</label>
+      <label class="chip on"><input type="checkbox" data-opt="ledDims" checked><span class="sw"></span>LED dimensions</label>
     </div>
   </div>
 
@@ -767,7 +767,8 @@ echo(str("Origin shift applied (", origin, "): ", origin_shift()));
     [`Layout ${LEDBAR.layout}`, LED_LAYOUTS[LEDBAR.layout].name, `top row + left column + right column, WS2812 ${LEDBAR.name} (${LEDBAR.size} sq, ${LEDBAR.h} tall${LEDBAR.pkg === '2020' ? ', height from memory of the datasheet' : ''})`],
     ['Top row', `pitch ${f(LEDBAR.pitch,3)}`, `${LED_LAYOUTS[LEDBAR.layout].top.length} on 7 positions, X ${LED_LAYOUTS[LEDBAR.layout].top.map(k => f(ledX(k),2)).join(' / ')}; 7 would sit flush with the outline`],
     ['Top row Y', `${f(P.lb_h + LEDBAR.gap,2)}`, `centres ${LEDBAR.gap} above the outline's top edge (placeholder)`],
-    ['Side columns', `X −${f(LEDBAR.side,2)} / ${f(P.lb_w + LEDBAR.side,2)}`, `centres ${LEDBAR.side} out from the outline's sides (placeholder); Y ${LED_LAYOUTS[LEDBAR.layout].side.map(k => `${f(aaLevels(false)[k],2)} (AA ${k === 'bot' ? 'bottom' : k === 'mid' ? 'middle' : 'top'})`).join(', ')}`]
+    ['Side columns', `X −${f(LEDBAR.side,2)} / ${f(P.lb_w + LEDBAR.side,2)}`, `centres ${LEDBAR.side} out from the outline's sides (placeholder); Y ${LED_LAYOUTS[LEDBAR.layout].side.map(k => `${f(aaLevels(false)[k],2)} (AA ${k === 'bot' ? 'bottom' : k === 'mid' ? 'middle' : 'top'})`).join(', ')}`],
+    ['Side spacing', `${f(D.aa_cy - D.aa_y0,2)} c–c`, `${f(D.aa_cy - D.aa_y0 - LEDBAR.size,2)} clear between ${LEDBAR.name} bodies, for the buttons (half the AA height, so the same in both layouts)`]
   ];
   const dimsEl = document.getElementById('dims');
   function buildDims() { dimsEl.textContent = ''; dimRows().forEach(r => {
@@ -1653,23 +1654,33 @@ echo(str("Origin shift applied (", origin, "): ", origin_shift()));
   // CAD-style dimension between the centre top LED (position 3) and its right neighbour: extension lines, arrowed line, value
   const ledDims = new THREE.Group(); ledBar.add(ledDims); G.ledDims = ledDims;
   const dimMat = new THREE.LineBasicMaterial({ color: 0x2b3a49 }), dimFill = new THREE.MeshBasicMaterial({ color: 0x2b3a49, side: THREE.DoubleSide });
-  let dimText = null;
-  function buildLedDims() {
-    while (ledDims.children.length) { const o = ledDims.children.pop(); if (o.geometry) o.geometry.dispose(); }
-    if (dimText) { dimText.map.dispose(); dimText.dispose(); }
-    const z = ledZ + LEDBAR.h + 0.05, x1 = ledX(3), x2 = ledX(4), y0 = P.lb_h + LEDBAR.gap, yd = y0 + LEDBAR.size / 2 + 5, ah = 1.6, aw = 0.5;
-    const seg = pts => new THREE.LineSegments(new THREE.BufferGeometry().setFromPoints(pts.map(([x, y]) => new THREE.Vector3(x, y, z))), dimMat);
-    ledDims.add(seg([[x1, y0 + LEDBAR.size / 2 + 0.8], [x1, yd + 1.2], [x2, y0 + LEDBAR.size / 2 + 0.8], [x2, yd + 1.2], [x1 + ah, yd], [x2 - ah, yd]]));
-    for (const [tip, dir] of [[x1, 1], [x2, -1]]) {              // filled arrowheads pointing at the extension lines
-      const g = new THREE.BufferGeometry().setFromPoints([new THREE.Vector3(tip, yd, z), new THREE.Vector3(tip + dir * ah, yd + aw, z), new THREE.Vector3(tip + dir * ah, yd - aw, z)]);
-      ledDims.add(new THREE.Mesh(g, dimFill));
+  const dimTexts = [];
+  function dimension(a, b, n, off) {                              // CAD dimension a → b (LED centres), drawn `off` mm out along unit normal n
+    const z = ledZ + LEDBAR.h + 0.05, ah = 1.6, aw = 0.5, r0 = LEDBAR.size / 2 + 0.8, V = (x, y) => new THREE.Vector3(x, y, z);
+    const dx = b[0] - a[0], dy = b[1] - a[1], len = Math.hypot(dx, dy), u = [dx / len, dy / len];
+    const at = (q, k) => [q[0] + n[0] * k, q[1] + n[1] * k];
+    const A = at(a, off), B = at(b, off);
+    const pts = [at(a, r0), at(a, off + 1.2), at(b, r0), at(b, off + 1.2), [A[0] + u[0] * ah, A[1] + u[1] * ah], [B[0] - u[0] * ah, B[1] - u[1] * ah]];
+    ledDims.add(new THREE.LineSegments(new THREE.BufferGeometry().setFromPoints(pts.map(q => V(q[0], q[1]))), dimMat));
+    for (const [tip, d] of [[A, 1], [B, -1]]) {                   // filled arrowheads pointing at the extension lines
+      const base = [tip[0] + u[0] * ah * d, tip[1] + u[1] * ah * d];
+      ledDims.add(new THREE.Mesh(new THREE.BufferGeometry().setFromPoints([V(tip[0], tip[1]), V(base[0] + n[0] * aw, base[1] + n[1] * aw), V(base[0] - n[0] * aw, base[1] - n[1] * aw)]), dimFill));
     }
     const c = document.createElement('canvas'); c.width = 512; c.height = 128; const g = c.getContext('2d');
     g.font = '600 96px "IBM Plex Mono", Menlo, monospace'; g.textAlign = 'center'; g.textBaseline = 'middle';
-    g.fillStyle = '#' + dimMat.color.getHexString(); g.fillText(f(LEDBAR.pitch, 2), 256, 68);
+    g.fillStyle = '#' + dimMat.color.getHexString(); g.fillText(f(len, 2), 256, 68);
     const tx = new THREE.CanvasTexture(c); tx.minFilter = THREE.LinearFilter; tx.anisotropy = 4;
-    dimText = new THREE.MeshBasicMaterial({ map: tx, transparent: true, depthWrite: false });
-    const label = new THREE.Mesh(new THREE.PlaneGeometry(14, 3.5), dimText); label.position.set((x1 + x2) / 2, yd + 2.1, z); ledDims.add(label);
+    const m = new THREE.MeshBasicMaterial({ map: tx, transparent: true, depthWrite: false }); dimTexts.push(m);
+    const label = new THREE.Mesh(new THREE.PlaneGeometry(14, 3.5), m), mid = at([(a[0] + b[0]) / 2, (a[1] + b[1]) / 2], off + 2.1);
+    label.position.set(mid[0], mid[1], z); label.rotation.z = Math.atan2(u[1], u[0]); ledDims.add(label);   // reads along the line, bottom to top when vertical
+  }
+  function buildLedDims() {
+    while (ledDims.children.length) { const o = ledDims.children.pop(); if (o.geometry) o.geometry.dispose(); }
+    while (dimTexts.length) { const m = dimTexts.pop(); m.map.dispose(); m.dispose(); }
+    const y0 = P.lb_h + LEDBAR.gap;
+    dimension([ledX(3), y0], [ledX(4), y0], [0, 1], LEDBAR.size / 2 + 5);              // top-row pitch, above the row
+    const left = ledPts.filter(q => q.s === 'L').sort((p1, p2) => p1.y - p2.y);          // left column, bottom to top: the button gaps
+    for (let j = 1; j < left.length; j++) dimension([left[j - 1].x, left[j - 1].y], [left[j].x, left[j].y], [-1, 0], LEDBAR.size / 2 + 4);
   }
   function ledLayout() {                                          // package size and height, layout, pitch, side columns, dimension
     const top = ledZ + LEDBAR.h, s = LEDBAR.size; ledPts = ledPoints(ledFlip);
