@@ -86,15 +86,20 @@ version will be, with no browser APIs beyond `Math`:
   ladder, diagonal sweep, rings, checkered-flag wave, best-lap slam), `postFxB`
   (`glitchRows`), `renderBootB` (particle swarm, bouncing letters, `squeezeY` CRT
   collapse/expand, ladder self-test, slot-machine digits).
-- **LED bar** (`LED`, `ledFrame`, `ledPace`, `ledFx`, `ledBoot`): 9 × WS2812 above the
-  module. `ledFrame(now)` runs at the end of every `renderFrame` and fills `LED.buf`, 27
-  bytes in WS2812 wire order (G, R, B), which is exactly what the firmware clocks out.
-  Effects mix in perceptual 0..1 (`ledMix`); the conversion applies gamma 2.2 and then
-  `LED.bright`. Pace: the delta to best grows out from the centre LED, green ahead and red
-  behind, 4 LEDs a side = 0.6 s, a dim white pip inside ±40 ms; a glint runs outward while
-  gaining and the bar throbs while losing. Events: sector (amber wipe), purple (white-edged
-  purple wipe, then twinkle), best lap (purple/white chase), lap (one white sweep right to
-  left), overheat (outer pairs strobe red), boot (purple comet).
+- **LED bar** (`LED`, `ledFrame`, `ledPace`, `ledFx`, `ledBoot`): 11 × WS2812, 9 in a row
+  above the module and one each side of it. Chain order: 0–8 the top row left to right,
+  9 the left side, 10 the right side. `ledFrame(now)` runs at the end of every
+  `renderFrame` and fills `LED.buf`, 33 bytes in WS2812 wire order (G, R, B), which is
+  exactly what the firmware clocks out. Effects mix in perceptual 0..1 (`ledMix`); the
+  conversion applies gamma 2.2 and then `LED.bright`. `LED_POS` gives each LED a
+  left-to-right position (sides at −1 and 9) and `LED_DIST` its ring out from the centre
+  (sides are ring 5), so every effect treats the side pair as its outermost ring. Pace:
+  the delta to best grows out from the centre LED, green ahead and red behind, 4 LEDs a
+  side = 0.6 s, the side pair filling in from 0.6 to 0.9 s; a dim white pip inside
+  ±40 ms; a glint runs outward while gaining and the bar throbs while losing. Events:
+  sector (amber wipe), purple (white-edged purple wipe, then twinkle), best lap
+  (purple/white chase), lap (one white sweep right to left), overheat (outer pairs and
+  sides strobe red), boot (purple comet, side to side).
 - `window.perchDemo` exposes `sim`, `fx`, `ui`, `fb`, `LED` and the event functions for poking
   from the console (`perchDemo.sim.bestLap = 70000` then press Lap forces a best lap).
 - **Scheduler**: `uiTick(step)` is called a fixed number of times per second from the
@@ -138,15 +143,17 @@ layout inside `fbFill`/`fbPx`, and emit `F57` and `LOGO_SRC` as `const uint8_t[]
 - Theme colours are CSS tokens on `:root` (light) with dark overrides; `applyTheme()`
   copies the 3D-relevant ones (background, grid, edge, VA/AA) into the scene and re-runs
   on `prefers-color-scheme` changes or a `data-theme` attribute change.
-- `LEDBAR` (next to `P`) places the LED bar: 9 LEDs in a 2.7 mm package, outer package
-  edges flush with the outline (the drawing's 98.7), so pitch = (98.7 − 2.7) / 8 = 12.0 mm;
-  `gap` (outline top edge → LED centre, 3.0) and `h` (1.0) are placeholders until the PCB
-  exists. The bar sits
-  on the PCB plane (the frame's rear face), is a child of the scene rather than the module
-  so it stays put for the 6 o'clock mount, and moves with the pins in the exploded view.
-  `ledShow` turns `LED.buf` into lens colour, a halo sprite, a glint sprite above ~86 %
-  of the commanded level, and three point lights that tint the module's top edge. Actual
-  size draws the same row as DOM squares.
+- `LEDBAR` (next to `P`) places the LEDs: the top row is 9 in a 2.7 mm package, outer
+  package edges flush with the outline (the drawing's 98.7), so pitch =
+  (98.7 − 2.7) / 8 = 12.0 mm. The side pair (`ledPos`) sits level with the AA's vertical
+  middle, centres `gap` out from the outline's sides. `gap` (3.0, used for the top row and
+  the sides) and `h` (1.0) are placeholders until the PCB exists. The LEDs sit on the PCB
+  plane (the frame's rear face) and are children of the scene rather than the module, so
+  they stay put for the 6 o'clock mount; the side pair moves to stay level with the AA,
+  which rolls to the other half. They move with the pins in the exploded view. `ledShow`
+  turns `LED.buf` into lens colour, a halo sprite, a glint sprite above ~86 % of the
+  commanded level, and five point lights (thirds of the top row, one per side LED) that
+  tint the module's edges. Actual size draws the same LEDs as DOM squares.
 
 ## Feeding it a framebuffer from firmware
 
