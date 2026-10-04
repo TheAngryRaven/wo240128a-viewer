@@ -86,16 +86,18 @@ version will be, with no browser APIs beyond `Math`:
   ladder, diagonal sweep, rings, checkered-flag wave, best-lap slam), `postFxB`
   (`glitchRows`), `renderBootB` (particle swarm, bouncing letters, `squeezeY` CRT
   collapse/expand, ladder self-test, slot-machine digits).
-- **LED bar** (`LED`, `ledFrame`, `ledPace`, `ledFx`, `ledBoot`): 11 × WS2812, 9 in a row
-  above the module and one each side of it. Chain order: 0–8 the top row left to right,
-  9 the left side, 10 the right side. `ledFrame(now)` runs at the end of every
-  `renderFrame` and fills `LED.buf`, 33 bytes in WS2812 wire order (G, R, B), which is
-  exactly what the firmware clocks out. Effects mix in perceptual 0..1 (`ledMix`); the
-  conversion applies gamma 2.2 and then `LED.bright`. `LED_POS` gives each LED a
-  left-to-right position (sides at −1 and 9) and `LED_DIST` its ring out from the centre
-  (sides are ring 5), so every effect treats the side pair as its outermost ring. Pace:
-  the delta to best grows out from the centre LED, green ahead and red behind, 4 LEDs a
-  side = 0.6 s, the side pair filling in from 0.6 to 0.9 s; a dim white pip inside
+- **LED bar** (`LED`, `ledSetTop`, `ledFrame`, `ledPace`, `ledFx`, `ledBoot`): WS2812s in a
+  row above the module (9 by default; the LEDs-row slider tries 5–9) plus one each side
+  of it. Chain order: the top row left to right (0 … top−1), then the left side, then the
+  right side. `ledFrame(now)` runs at the end of every `renderFrame` and fills `LED.buf`,
+  3 × (top + 2) bytes in WS2812 wire order (G, R, B), which is exactly what the firmware
+  clocks out. Effects mix in perceptual 0..1 (`ledMix`); the conversion applies gamma 2.2
+  and then `LED.bright`. `ledSetTop` gives each LED a left-to-right position (`LED_POS`,
+  sides just past the ends) and a ring out from the centre (`LED_RING`; an even count has
+  a centre pair, and the side pair is the outermost ring), so every effect works for any
+  count. Pace:
+  the delta to best grows out from the centre, green ahead and red behind, the full row
+  = 0.6 s, the side pair filling in from 0.6 to 0.9 s; a dim white pip inside
   ±40 ms; a glint runs outward while gaining and the bar throbs while losing. Events:
   sector (amber wipe), purple (white-edged purple wipe, then twinkle), best lap
   (purple/white chase), lap (one white sweep right to left), overheat (outer pairs and
