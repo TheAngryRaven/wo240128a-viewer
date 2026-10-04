@@ -100,8 +100,8 @@ version will be, with no browser APIs beyond `Math`:
   = 0.6 s, the side pair filling in from 0.6 to 0.9 s; a dim white pip inside
   ±40 ms; a glint runs outward while gaining and the bar throbs while losing. Events:
   sector (amber wipe), purple (white-edged purple wipe, then twinkle), best lap
-  (purple/white chase), lap (one white sweep right to left), overheat (outer pairs and
-  sides strobe red), boot (purple comet, side to side).
+  (purple/white chase), lap (one white sweep right to left), overheat (red strobe on the
+  hot gauge's side: EGT left pair + left side LED, water the right), boot (purple comet, side to side).
 - `window.perchDemo` exposes `sim`, `fx`, `ui`, `fb`, `LED` and the event functions for poking
   from the console (`perchDemo.sim.bestLap = 70000` then press Lap forces a best lap).
 - **Scheduler**: `uiTick(step)` is called a fixed number of times per second from the

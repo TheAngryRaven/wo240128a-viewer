@@ -327,7 +327,7 @@ h1{border-left:4px solid var(--accent);padding-left:12px}
       <li><b>Timekeeper</b> is time-centric: big lap time, sector boxes in the header. Boot: logo spin-in, name, fly-to-header, gauge sweep, dissolve. Purple: strobe, 1-px shake, badge, sparkles. Best lap: banner.</li>
       <li><b>Pace</b> is for the driver mid-session: a 32-block RPM ladder, a 56-px RPM number, pace delta with trend, EGT and water thermometers with their target bands at the edges, lap times demoted to one strip, an icon row. Boot: the logo coalesces from a swarm of 860 particles, the name bounces in, a CRT collapse to a line, the dash CRT-expands, ladder self-test, slot-machine digits. Purple: row glitch, diagonal sweep, a sector chip drops from the ladder. Best lap: expanding rings, a checkered flag waves through the lap strip, the time slams in. Overheat: the EGT bar blinks, a warning chip drops, a flame joins the icon row.</li>
     </ul>
-    <p><b>The LED bar</b> is 9 × WS2812B-2020 (2.0 mm) on the main PCB; the LEDs row tries 5 to 9 of them and switches to the 5.0 mm 5050 for comparison. They sit in a row above the module as wide as the drawing's outline, the outer LEDs' edges flush with its sides, 12.09 mm apart with nine 2020s (the pitch follows the count and the package). Two more sit one each side of the module, level with the middle of the active area, 3 mm out from the outline; they are the outermost ring of every effect. The bar shows the pace delta growing out from the centre, green ahead of best and red behind, the full row for 0.6 s, and the side pair fills in past 0.6 s. Gaining, a glint runs outward along it; losing, it throbs. A slower sector wipes amber, a purple sector wipes purple and twinkles, a best lap chases purple and white, an ordinary lap sweeps white once, and overheat strobes the outer pairs and the sides red. The effects fill a GRB buffer (3 bytes per LED, 33 for 9 + 2) once per UI tick, the bytes the firmware would clock out; brightness is a global scale after gamma 2.2. The row's height above the module and the side LEDs' distance from it are placeholders until the PCB exists.</p>
+    <p><b>The LED bar</b> is 9 × WS2812B-2020 (2.0 mm) on the main PCB; the LEDs row tries 5 to 9 of them and switches to the 5.0 mm 5050 for comparison. They sit in a row above the module as wide as the drawing's outline, the outer LEDs' edges flush with its sides, 12.09 mm apart with nine 2020s (the pitch follows the count and the package). Two more sit one each side of the module, level with the middle of the active area, 3 mm out from the outline; they are the outermost ring of every effect. The bar shows the pace delta growing out from the centre, green ahead of best and red behind, the full row for 0.6 s, and the side pair fills in past 0.6 s. Gaining, a glint runs outward along it; losing, it throbs. A slower sector wipes amber, a purple sector wipes purple and twinkles, a best lap chases purple and white, an ordinary lap sweeps white once, and overheat strobes red on the hot gauge's side (EGT: the left pair and the left side LED). The effects fill a GRB buffer (3 bytes per LED, 33 for 9 + 2) once per UI tick, the bytes the firmware would clock out; brightness is a global scale after gamma 2.2. The row's height above the module and the side LEDs' distance from it are placeholders until the PCB exists.</p>
   </section>
 
   <section class="panel">
@@ -1107,9 +1107,9 @@ h1{border-left:4px solid var(--accent);padding-left:12px}
       } else if (e.type === 'lap' && !e.best && a < 600) {        // ordinary lap: one white sweep, right to left like the flag
         const x = (LED.top + 3) * (1 - a / 600) - 2;              // from past the right side LED to past the left one
         for (let i = 0; i < LED.n; i++) ledMix(i, LED_WHITE, 0.9, Math.max(0, 1 - Math.abs(LED_POS[i] - x)));
-      } else if (e.type === 'overheat' && a < 2400) {             // over temperature: the outer pairs and the sides strobe red
-        const on = ((a / 125) | 0) & 1 ? 0 : 1;
-        for (const i of [0, 1, LED.top - 2, LED.top - 1, LED.L, LED.R]) ledMix(i, LED_RED, on, 1);
+      } else if (e.type === 'overheat' && a < 2400) {             // over temperature: strobe red on the gauge's side of the screen
+        const on = ((a / 125) | 0) & 1 ? 0 : 1;                  // EGT is drawn on the left, water on the right
+        for (const i of e.gauge === 'h2o' ? [LED.top - 2, LED.top - 1, LED.R] : [0, 1, LED.L]) ledMix(i, LED_RED, on, 1);
       }
     }
   }
@@ -1692,7 +1692,7 @@ h1{border-left:4px solid var(--accent);padding-left:12px}
       sim.t = sim.bestLap - 150 - sim.rng() * 300; endSector(now, 'auto'); endLap(now);
     }
     else if (b.dataset.act === 'purple' && ui.mode === 'live') { const k = sim.sectorIdx; sim.t = Math.max(sim.t, sim.sectorEnds[k]); endSector(now, 'purple'); if (k === 2) endLap(now); }
-    else if (b.dataset.act === 'overheat' && ui.mode === 'live') { sim.egtBoost = 260; pushFx({ type: 'overheat', t0: now + 450 }); }
+    else if (b.dataset.act === 'overheat' && ui.mode === 'live') { sim.egtBoost = 260; pushFx({ type: 'overheat', gauge: 'egt', t0: now + 450 }); }
   });
   document.getElementById('themes').addEventListener('click', e => {
     const b = e.target.closest('[data-theme]'); if (!b) return; ui.theme = b.dataset.theme; reboot();
