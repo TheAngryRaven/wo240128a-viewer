@@ -270,8 +270,8 @@ h1{border-left:4px solid var(--accent);padding-left:12px}
       <span class="lbl">LEDs</span>
       <label class="chip on"><input type="checkbox" id="ledOn" checked><span class="sw"></span>11 × WS2812 lit</label>
       <span class="sep"></span>
-      <button class="chip" data-pkg="2727" aria-pressed="true">2.7 mm</button>
-      <button class="chip" data-pkg="2020" aria-pressed="false">2020 · 2.0 mm</button>
+      <button class="chip" data-pkg="2020" aria-pressed="true">2020 · 2.0 mm</button>
+      <button class="chip" data-pkg="5050" aria-pressed="false">5050 · 5.0 mm</button>
       <div class="slider">
         <input type="range" id="ledBright" min="5" max="100" step="5" value="40" aria-label="LED brightness in percent">
         <span class="val" id="ledBrightVal">40 %</span>
@@ -323,7 +323,7 @@ h1{border-left:4px solid var(--accent);padding-left:12px}
       <li><b>Timekeeper</b> is time-centric: big lap time, sector boxes in the header. Boot: logo spin-in, name, fly-to-header, gauge sweep, dissolve. Purple: strobe, 1-px shake, badge, sparkles. Best lap: banner.</li>
       <li><b>Pace</b> is for the driver mid-session: a 32-block RPM ladder, a 56-px RPM number, pace delta with trend, EGT and water thermometers with their target bands at the edges, lap times demoted to one strip, an icon row. Boot: the logo coalesces from a swarm of 860 particles, the name bounces in, a CRT collapse to a line, the dash CRT-expands, ladder self-test, slot-machine digits. Purple: row glitch, diagonal sweep, a sector chip drops from the ladder. Best lap: expanding rings, a checkered flag waves through the lap strip, the time slams in. Overheat: the EGT bar blinks, a warning chip drops, a flame joins the icon row.</li>
     </ul>
-    <p><b>The LED bar</b> is 9 × WS2812 in a 2.7 mm package (or the 2.0 mm 2020, switch in the LEDs row) on the main PCB, in a row above the module as wide as the drawing's outline, the outer LEDs' edges flush with its sides, 12.0 mm apart (12.09 with the 2020). Two more sit one each side of the module, level with the middle of the active area, 3 mm out from the outline; they are the outermost ring of every effect. The bar shows the pace delta growing out from the centre, green ahead of best and red behind, 4 LEDs a side for 0.6 s, and the side pair fills in past 0.6 s. Gaining, a glint runs outward along it; losing, it throbs. A slower sector wipes amber, a purple sector wipes purple and twinkles, a best lap chases purple and white, an ordinary lap sweeps white once, and overheat strobes the outer pairs and the sides red. The effects fill a 33-byte GRB buffer once per UI tick, the bytes the firmware would clock out; brightness is a global scale after gamma 2.2. The row's height above the module and the package height are placeholders until the PCB exists.</p>
+    <p><b>The LED bar</b> is 9 × WS2812B-2020 (2.0 mm; the LEDs row switches to the 5.0 mm 5050 for comparison) on the main PCB, in a row above the module as wide as the drawing's outline, the outer LEDs' edges flush with its sides, 12.09 mm apart (11.71 with the 5050). Two more sit one each side of the module, level with the middle of the active area, 3 mm out from the outline; they are the outermost ring of every effect. The bar shows the pace delta growing out from the centre, green ahead of best and red behind, 4 LEDs a side for 0.6 s, and the side pair fills in past 0.6 s. Gaining, a glint runs outward along it; losing, it throbs. A slower sector wipes amber, a purple sector wipes purple and twinkles, a best lap chases purple and white, an ordinary lap sweeps white once, and overheat strobes the outer pairs and the sides red. The effects fill a 33-byte GRB buffer once per UI tick, the bytes the firmware would clock out; brightness is a global scale after gamma 2.2. The row's height above the module and the package height are placeholders until the PCB exists.</p>
   </section>
 
   <section class="panel">
@@ -408,16 +408,17 @@ h1{border-left:4px solid var(--accent);padding-left:12px}
   D.led_tip_z = -(D.total_t + P.led_pin_len);
   D.peg_tip_z = -(D.total_t + P.peg_len);
   const pinX = n => P.pin1_x + (n - 1) * P.pin_pitch;
-  // LED bar on the main PCB (not the module, not in the .scad): 9 × WS2812 in a 2.7 mm package in one row above the
+  // LED bar on the main PCB (not the module, not in the .scad): 9 × WS2812 (2020 by default, see LED_PKG) in one row above the
   // module, outer package edges flush with the outline's left and right edges (the drawing's 98.7), on the PCB at the frame's rear face.
   // gap and h are placeholders until the PCB exists.
-  // Two packages to compare: the 2.7 mm part (height a placeholder) and the WS2812B-2020 (2.0 × 2.0 × 0.84, check the datasheet).
-  const LED_PKG = { '2727': { name: '2.7 mm', size: 2.7, h: 1.0 }, '2020': { name: '2020', size: 2.0, h: 0.84 } };
+  // Two packages to compare: the WS2812B-2020 the logger is specced for (2.0 × 2.0 × 0.84; height from memory of the
+  // datasheet, check it) and the classic WS2812B 5050 (5.0 × 5.0 × 1.6).
+  const LED_PKG = { '2020': { name: '2020', size: 2.0, h: 0.84 }, '5050': { name: '5050', size: 5.0, h: 1.6 } };
   const LEDBAR = { n: 9, gap: 3.0 };                                // gap: outline top edge → LED centre
   function ledSetPkg(key) {                                         // top row stays flush with the outline: the pitch follows the size
-    Object.assign(LEDBAR, LED_PKG[key], { pkg: key }); LEDBAR.pitch = (P.lb_w - LEDBAR.size) / (LEDBAR.n - 1);   // 12.0 / 12.0875
+    Object.assign(LEDBAR, LED_PKG[key], { pkg: key }); LEDBAR.pitch = (P.lb_w - LEDBAR.size) / (LEDBAR.n - 1);   // 12.0875 / 11.7125
   }
-  ledSetPkg('2727');
+  ledSetPkg('2020');
   const ledX = i => LEDBAR.size / 2 + i * LEDBAR.pitch;  // LED centre, from the outline's left edge
   // plus one LED each side of the module, level with the AA's vertical middle, centre `gap` out from the outline's side.
   // Chain order: 0–8 the top row left to right, 9 the left side, 10 the right side.
@@ -457,7 +458,7 @@ h1{border-left:4px solid var(--accent);padding-left:12px}
     ['Length', `${f(P.peg_len,1)} past frame`, `tip at Z = −${f(-D.peg_tip_z,1)}`],
     ['g', 'LED bar (main PCB, not the module)'],
     [`${LEDBAR.n} × WS2812 ${LEDBAR.name}`, `${LEDBAR.size} sq, pitch ${f(LEDBAR.pitch,3)}`, `centres X ${f(ledX(0),2)} to ${f(ledX(LEDBAR.n - 1),2)}; outer edges flush with the outline`],
-    ['Row', `Y ${f(P.lb_h + LEDBAR.gap,2)}`, `centre ${LEDBAR.gap} above the outline's top edge (placeholder); ${LEDBAR.h} tall${LEDBAR.pkg === '2020' ? ' (2020 datasheet, check it)' : ' (placeholder)'}`],
+    ['Row', `Y ${f(P.lb_h + LEDBAR.gap,2)}`, `centre ${LEDBAR.gap} above the outline's top edge (placeholder); ${LEDBAR.h} tall${LEDBAR.pkg === '2020' ? ' (from memory of the 2020 datasheet, check it)' : ''}`],
     ['Side pair', `X −${f(LEDBAR.gap,2)} / ${f(P.lb_w + LEDBAR.gap,2)}`, `Y ${f(D.aa_cy,2)}, level with the AA's middle; centres ${LEDBAR.gap} out from the outline's sides (placeholder)`]
   ];
   const dimsEl = document.getElementById('dims');
