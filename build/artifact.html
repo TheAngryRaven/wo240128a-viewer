@@ -320,7 +320,7 @@ h1{border-left:4px solid var(--accent);padding-left:12px}
       <li><b>Timekeeper</b> is time-centric: big lap time, sector boxes in the header. Boot: logo spin-in, name, fly-to-header, gauge sweep, dissolve. Purple: strobe, 1-px shake, badge, sparkles. Best lap: banner.</li>
       <li><b>Pace</b> is for the driver mid-session: a 32-block RPM ladder, a 56-px RPM number, pace delta with trend, EGT and water thermometers with their target bands at the edges, lap times demoted to one strip, an icon row. Boot: the logo coalesces from a swarm of 860 particles, the name bounces in, a CRT collapse to a line, the dash CRT-expands, ladder self-test, slot-machine digits. Purple: row glitch, diagonal sweep, a sector chip drops from the ladder. Best lap: expanding rings, a checkered flag waves through the lap strip, the time slams in. Overheat: the EGT bar blinks, a warning chip drops, a flame joins the icon row.</li>
     </ul>
-    <p><b>The LED bar</b> is 9 × WS2812 in a 2.7 mm package on the main PCB, in a row above the module whose outer edges line up with the viewing area. It shows the pace delta as a bar growing out from the centre, green ahead of best and red behind, 4 LEDs a side for 0.6 s. Gaining, a glint runs outward along it; losing, it throbs. A slower sector wipes amber, a purple sector wipes purple and twinkles, a best lap chases purple and white, an ordinary lap sweeps white once, and overheat strobes the outer pairs red. The effects fill a 27-byte GRB buffer once per UI tick, the bytes the firmware would clock out; brightness is a global scale after gamma 2.2. The row's height above the module and the package height are placeholders until the PCB exists.</p>
+    <p><b>The LED bar</b> is 9 × WS2812 in a 2.7 mm package on the main PCB, in a row above the module as wide as the drawing's outline, the outer LEDs' edges flush with its sides, 12.0 mm apart. It shows the pace delta as a bar growing out from the centre, green ahead of best and red behind, 4 LEDs a side for 0.6 s. Gaining, a glint runs outward along it; losing, it throbs. A slower sector wipes amber, a purple sector wipes purple and twinkles, a best lap chases purple and white, an ordinary lap sweeps white once, and overheat strobes the outer pairs red. The effects fill a 27-byte GRB buffer once per UI tick, the bytes the firmware would clock out; brightness is a global scale after gamma 2.2. The row's height above the module and the package height are placeholders until the PCB exists.</p>
   </section>
 
   <section class="panel">
@@ -696,11 +696,11 @@ echo(str("Origin shift applied (", origin, "): ", origin_shift()));
   D.peg_tip_z = -(D.total_t + P.peg_len);
   const pinX = n => P.pin1_x + (n - 1) * P.pin_pitch;
   // LED bar on the main PCB (not the module, not in the .scad): 9 × WS2812 in a 2.7 mm package in one row above the
-  // module, outer package edges flush with the VA's left and right edges, sitting on the PCB at the frame's rear face.
+  // module, outer package edges flush with the outline's left and right edges (the drawing's 98.7), on the PCB at the frame's rear face.
   // gap and h are placeholders until the PCB exists.
   const LEDBAR = { n: 9, size: 2.7, h: 1.0, gap: 3.0 };            // gap: outline top edge → LED centre
-  LEDBAR.pitch = (P.va_w - LEDBAR.size) / (LEDBAR.n - 1);
-  const ledX = i => P.va_x0 + LEDBAR.size / 2 + i * LEDBAR.pitch;  // LED centre, from the outline's left edge
+  LEDBAR.pitch = (P.lb_w - LEDBAR.size) / (LEDBAR.n - 1);   // 12.0
+  const ledX = i => LEDBAR.size / 2 + i * LEDBAR.pitch;  // LED centre, from the outline's left edge
   const f = (x, d) => (Math.round(x * Math.pow(10, d)) / Math.pow(10, d)).toFixed(d);
 
   // ------------------------------------------------------------------
@@ -733,7 +733,7 @@ echo(str("Origin shift applied (", origin, "): ", origin_shift()));
     ['2 × Ø', `${P.peg_d}`, `${P.peg_x} from each edge, ${f(P.lb_w-2*P.peg_x,1)} apart`],
     ['Length', `${f(P.peg_len,1)} past frame`, `tip at Z = −${f(-D.peg_tip_z,1)}`],
     ['g', 'LED bar (main PCB, not the module)'],
-    [`${LEDBAR.n} × WS2812`, `${LEDBAR.size} sq, pitch ${f(LEDBAR.pitch,3)}`, `centres X ${f(ledX(0),2)} to ${f(ledX(LEDBAR.n - 1),2)}; outer edges flush with the VA`],
+    [`${LEDBAR.n} × WS2812`, `${LEDBAR.size} sq, pitch ${f(LEDBAR.pitch,3)}`, `centres X ${f(ledX(0),2)} to ${f(ledX(LEDBAR.n - 1),2)}; outer edges flush with the outline`],
     ['Row', `Y ${f(P.lb_h + LEDBAR.gap,2)}`, `centre ${LEDBAR.gap} above the outline's top edge, ${LEDBAR.h} tall (both placeholders)`]
   ];
   const dimsEl = document.getElementById('dims');

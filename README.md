@@ -139,8 +139,9 @@ layout inside `fbFill`/`fbPx`, and emit `F57` and `LOGO_SRC` as `const uint8_t[]
   copies the 3D-relevant ones (background, grid, edge, VA/AA) into the scene and re-runs
   on `prefers-color-scheme` changes or a `data-theme` attribute change.
 - `LEDBAR` (next to `P`) places the LED bar: 9 LEDs in a 2.7 mm package, outer package
-  edges flush with the VA, so pitch = (92.0 − 2.7) / 8 = 11.1625 mm; `gap` (outline top
-  edge → LED centre, 3.0) and `h` (1.0) are placeholders until the PCB exists. The bar sits
+  edges flush with the outline (the drawing's 98.7), so pitch = (98.7 − 2.7) / 8 = 12.0 mm;
+  `gap` (outline top edge → LED centre, 3.0) and `h` (1.0) are placeholders until the PCB
+  exists. The bar sits
   on the PCB plane (the frame's rear face), is a child of the scene rather than the module
   so it stays put for the 6 o'clock mount, and moves with the pins in the exploded view.
   `ledShow` turns `LED.buf` into lens colour, a halo sprite, a glint sprite above ~86 %
