@@ -101,7 +101,7 @@ version will be, with no browser APIs beyond `Math`:
   ladder, diagonal sweep, rings, checkered-flag wave, best-lap slam), `postFxB`
   (`glitchRows`), `renderBootB` (particle swarm, bouncing letters, `squeezeY` CRT
   collapse/expand, ladder self-test, slot-machine digits).
-- **LEDs** (`LED`, `ledSetLayout`, `ledFrame`, `ledPace`, `ledFx`, `ledBoot`): 11 × WS2812 on
+- **LEDs** (`LED`, `ledSetLayout`, `ledFrame`, `ledPace`, `ledFx`, `ledStatus`, `ledBoot`): 11 × WS2812 on
   the main PCB, in one of two layouts (`LED_LAYOUTS`): **B** "5 + 3 + 3" (default), the
   middle 5 of 7 top-row positions plus three down each side (AA top, middle, bottom), or
   **A** "7 + 2 + 2", all 7 on top plus two per side (AA middle, bottom). The chain runs up
@@ -111,13 +111,18 @@ version will be, with no browser APIs beyond `Math`:
   `ledFrame(now)` runs at the end of every `renderFrame` and fills `LED.buf`, 33 bytes in
   WS2812 wire order (G, R, B), which is exactly what the firmware clocks out. Effects mix
   in perceptual 0..1 (`ledMix`); the conversion applies gamma 2.2 and then `LED.bright`.
-  Pace: the delta to best grows out from the centre, green ahead and red behind, the top
-  row = 0.6 s and on down the side columns to 1.2 s; a dim white pip inside ±40 ms; a
-  glint runs outward while gaining and the bar throbs while losing. Events: sector (amber
-  wipe), purple (white-edged purple wipe, then twinkle), best lap (purple/white chase along
-  the chain), lap (one white sweep right to left), overheat (red strobe on the hot gauge's
-  side: the whole column and the two nearest top LEDs; EGT is left, water right), boot
-  (purple comet along the chain).
+  Roles: the **top row shows pace**, `LED.pace` = `'pip'` (default, the prototype: one pip,
+  one LED per 0.25 s from the centre, right/green faster, left/red slower, 0.1 s of
+  hysteresis, a 150-ms fading trail, the end pip blinks off the scale; `LED_POS` holds each
+  top LED's signed step) or `'bar'` (`ledPaceBar`: grows out from the centre, the whole row
+  = 0.6 s, glint while gaining, throb while losing); a slower sector (amber wipe) and an
+  ordinary lap (white sweep) stay on the top row too. The **side columns are status LEDs**
+  (`ledGrip`, `ledStatus`), dark unless: grip loss (amber breathing), overheat (red strobe
+  on the hot gauge's side while it is over warn; EGT left, water right), rev limiter
+  (`RPMB.over`, 14,500: the bottom LED each side flashes blue). **Purple sectors and best
+  laps are global alerts** on every LED (purple wipe and twinkle; purple/white chase along
+  the chain). Boot: a purple comet along the chain. Order per frame: pace, grip, events,
+  then overheat and the limiter on top, so a warning is never hidden.
 - `window.perchDemo` exposes `sim`, `fx`, `ui`, `fb`, `LED` and the event functions for poking
   from the console (`perchDemo.sim.bestLap = 70000` then press Lap forces a best lap).
 - **Scheduler**: `uiTick(step)` is called a fixed number of times per second from the
