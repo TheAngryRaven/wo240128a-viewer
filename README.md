@@ -86,22 +86,23 @@ version will be, with no browser APIs beyond `Math`:
   ladder, diagonal sweep, rings, checkered-flag wave, best-lap slam), `postFxB`
   (`glitchRows`), `renderBootB` (particle swarm, bouncing letters, `squeezeY` CRT
   collapse/expand, ladder self-test, slot-machine digits).
-- **LED bar** (`LED`, `ledSetTop`, `ledFrame`, `ledPace`, `ledFx`, `ledBoot`): WS2812s in a
-  row above the module (9 by default; the LEDs-row slider tries 5–9) plus one each side
-  of it. Chain order: the top row left to right (0 … top−1), then the left side, then the
-  right side. `ledFrame(now)` runs at the end of every `renderFrame` and fills `LED.buf`,
-  3 × (top + 2) bytes in WS2812 wire order (G, R, B), which is exactly what the firmware
-  clocks out. Effects mix in perceptual 0..1 (`ledMix`); the conversion applies gamma 2.2
-  and then `LED.bright`. `ledSetTop` gives each LED a left-to-right position (`LED_POS`,
-  sides just past the ends) and a ring out from the centre (`LED_RING`; an even count has
-  a centre pair, and the side pair is the outermost ring), so every effect works for any
-  count. Pace:
-  the delta to best grows out from the centre, green ahead and red behind, the full row
-  = 0.6 s, the side pair filling in from 0.6 to 0.9 s; a dim white pip inside
-  ±40 ms; a glint runs outward while gaining and the bar throbs while losing. Events:
-  sector (amber wipe), purple (white-edged purple wipe, then twinkle), best lap
-  (purple/white chase), lap (one white sweep right to left), overheat (red strobe on the
-  hot gauge's side: EGT left pair + left side LED, water the right), boot (purple comet, side to side).
+- **LEDs** (`LED`, `ledSetLayout`, `ledFrame`, `ledPace`, `ledFx`, `ledBoot`): 11 × WS2812 on
+  the main PCB, in one of two layouts (`LED_LAYOUTS`): **B** "5 + 3 + 3" (default), the
+  middle 5 of 7 top-row positions plus three down each side (AA top, middle, bottom), or
+  **A** "7 + 2 + 2", all 7 on top plus two per side (AA middle, bottom). The chain runs up
+  the left column, along the top row left to right, down the right column. `ledSetLayout`
+  gives the UI core each LED's ring out from the centre (`LED_RING`; the side LEDs are the
+  rings after the top row, top to bottom), its side (`LED_SIDE`) and X (`LED_X`, mm).
+  `ledFrame(now)` runs at the end of every `renderFrame` and fills `LED.buf`, 33 bytes in
+  WS2812 wire order (G, R, B), which is exactly what the firmware clocks out. Effects mix
+  in perceptual 0..1 (`ledMix`); the conversion applies gamma 2.2 and then `LED.bright`.
+  Pace: the delta to best grows out from the centre, green ahead and red behind, the top
+  row = 0.6 s and on down the side columns to 1.2 s; a dim white pip inside ±40 ms; a
+  glint runs outward while gaining and the bar throbs while losing. Events: sector (amber
+  wipe), purple (white-edged purple wipe, then twinkle), best lap (purple/white chase along
+  the chain), lap (one white sweep right to left), overheat (red strobe on the hot gauge's
+  side: the whole column and the two nearest top LEDs; EGT is left, water right), boot
+  (purple comet along the chain).
 - `window.perchDemo` exposes `sim`, `fx`, `ui`, `fb`, `LED` and the event functions for poking
   from the console (`perchDemo.sim.bestLap = 70000` then press Lap forces a best lap).
 - **Scheduler**: `uiTick(step)` is called a fixed number of times per second from the
@@ -145,21 +146,22 @@ layout inside `fbFill`/`fbPx`, and emit `F57` and `LOGO_SRC` as `const uint8_t[]
 - Theme colours are CSS tokens on `:root` (light) with dark overrides; `applyTheme()`
   copies the 3D-relevant ones (background, grid, edge, VA/AA) into the scene and re-runs
   on `prefers-color-scheme` changes or a `data-theme` attribute change.
-- `LEDBAR` (next to `P`) places the LEDs: the top row is 9 × WS2812B-2020 (2.0 mm), outer
-  package edges flush with the outline (the drawing's 98.7), so pitch =
-  (98.7 − 2.0) / 8 = 12.0875 mm. `LED_PKG` holds the packages the LEDs row switches
-  between: the 2020 (2.0 × 2.0 × 0.84, height from memory of its datasheet; check it)
-  and the classic 5050 (5.0 × 5.0 × 1.6, pitch 11.7125) for comparison. `ledSetPkg` keeps
-  the top row flush with the outline; `ledApplyPkg` rescales the unit-cube bodies and
-  lenses and `buildDims` refreshes the dimension table. The side pair (`ledPos`) sits level with the AA's vertical
-  middle, centres `gap` out from the outline's sides. `gap` (3.0, used for the top row and
-  the sides) and `h` (1.0) are placeholders until the PCB exists. The LEDs sit on the PCB
-  plane (the frame's rear face) and are children of the scene rather than the module, so
-  they stay put for the 6 o'clock mount; the side pair moves to stay level with the AA,
-  which rolls to the other half. They move with the pins in the exploded view. `ledShow`
-  turns `LED.buf` into lens colour, a halo sprite, a glint sprite above ~86 % of the
-  commanded level, and five point lights (thirds of the top row, one per side LED) that
-  tint the module's edges. Actual size draws the same LEDs as DOM squares.
+- `LEDBAR` and `ledPoints` (next to `P`) place the LEDs. The top row uses 7 positions whose
+  outer package edges are flush with the outline (the drawing's 98.7): pitch =
+  (98.7 − 2.0) / 6 = 16.1167 mm for the 2020, 15.6167 for the 5050. Layout B fills the
+  middle 5, so they bunch in the middle at the same pitch. The side columns sit `side`
+  (5.0) out from the outline's sides, level with the AA's top / middle / bottom
+  (`aaLevels`); `gap` (3.0, outline top edge → top row) and `side` are placeholders until
+  the PCB exists. `LED_PKG` switches the 2020 (2.0 × 2.0 × 0.84, height from memory of its
+  datasheet; check it) and the 5050 (5.0 × 5.0 × 1.6). The LEDs sit on the PCB plane (the
+  frame's rear face) and are children of the scene rather than the module, so they stay
+  put for the 6 o'clock mount, except that the side columns follow the AA, which rolls to
+  the other half; they move with the pins in the exploded view. `ledLayout` places and
+  scales the meshes and redraws the CAD-style dimensions (`dimension`, `buildLedDims`,
+  toggled by "LED dimensions" in Show): the top-row pitch between positions 3 and 4, and each
+  gap in the left column (where the buttons go). `ledShow` turns `LED.buf` into lens
+  colour, a halo sprite, a glint sprite above ~86 % of the commanded level, and five point
+  lights (thirds of the top row, one per side column). Actual size draws the same LEDs.
 
 ## Feeding it a framebuffer from firmware
 
