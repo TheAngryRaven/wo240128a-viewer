@@ -78,10 +78,12 @@ version will be, with no browser APIs beyond `Math`:
 - **Theme C "Thermal"** (default): `drawTempC` (2× name, 32-px value, 14-px bar with band
   notches, peak flag, trend arrow, COLD / HIGH / HOT, whole-panel flip at warn), `drawLapC`
   (solid lap counter, 42-px digits, sector boxes; a new lap rolls in three steps),
-  `thermalSample` / `drawTraceC` (RPM sweep trace: a write head writes one column every 75 ms,
-  so each column changes once per 6-s sweep), `drawStatusC` (last lap and race clock only),
+  `updateRpmBarC` / `drawRpmBarC` (RPM bar: 18 slanted segments of 500 rpm from 6,000,
+  stepping up in height; lit solid, unlit a stub, shift zone from 13,500 outlined, a peak
+  cap that holds 0.7 s then falls a segment every 120 ms, 100 rpm of hysteresis, the band
+  flips past 14,500; `RPMB` holds the numbers), `drawStatusC` (last lap and race clock only),
   `drawMidC` / `drawGripC` (grip loss: hazard-stripe wipe, skidding tyre, GRIP %, 6-block
-  meter, GRIP OK on recovery), `drawFxC` (sector and purple cards that open and close about the
+  meter over the RPM bar, GRIP OK on recovery), `drawFxC` (sector and purple cards that open and close about the
   centre in three 80-ms steps, best-lap frames and card), `postFxC` (whole-screen flash, 2-px
   shake), `renderBootC` (logo fills with heat in six steps, flash, name, heat bar, shutters,
   gauge self-test). Drawn for the glass: no stroke under 2 px, motion that steps and holds,
