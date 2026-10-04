@@ -269,6 +269,9 @@ h1{border-left:4px solid var(--accent);padding-left:12px}
     <div class="row" id="ledrow">
       <span class="lbl">LEDs</span>
       <label class="chip on"><input type="checkbox" id="ledOn" checked><span class="sw"></span>11 × WS2812 lit</label>
+      <span class="sep"></span>
+      <button class="chip" data-pkg="2727" aria-pressed="true">2.7 mm</button>
+      <button class="chip" data-pkg="2020" aria-pressed="false">2020 · 2.0 mm</button>
       <div class="slider">
         <input type="range" id="ledBright" min="5" max="100" step="5" value="40" aria-label="LED brightness in percent">
         <span class="val" id="ledBrightVal">40 %</span>
@@ -320,7 +323,7 @@ h1{border-left:4px solid var(--accent);padding-left:12px}
       <li><b>Timekeeper</b> is time-centric: big lap time, sector boxes in the header. Boot: logo spin-in, name, fly-to-header, gauge sweep, dissolve. Purple: strobe, 1-px shake, badge, sparkles. Best lap: banner.</li>
       <li><b>Pace</b> is for the driver mid-session: a 32-block RPM ladder, a 56-px RPM number, pace delta with trend, EGT and water thermometers with their target bands at the edges, lap times demoted to one strip, an icon row. Boot: the logo coalesces from a swarm of 860 particles, the name bounces in, a CRT collapse to a line, the dash CRT-expands, ladder self-test, slot-machine digits. Purple: row glitch, diagonal sweep, a sector chip drops from the ladder. Best lap: expanding rings, a checkered flag waves through the lap strip, the time slams in. Overheat: the EGT bar blinks, a warning chip drops, a flame joins the icon row.</li>
     </ul>
-    <p><b>The LED bar</b> is 9 × WS2812 in a 2.7 mm package on the main PCB, in a row above the module as wide as the drawing's outline, the outer LEDs' edges flush with its sides, 12.0 mm apart. Two more sit one each side of the module, level with the middle of the active area, 3 mm out from the outline; they are the outermost ring of every effect. The bar shows the pace delta growing out from the centre, green ahead of best and red behind, 4 LEDs a side for 0.6 s, and the side pair fills in past 0.6 s. Gaining, a glint runs outward along it; losing, it throbs. A slower sector wipes amber, a purple sector wipes purple and twinkles, a best lap chases purple and white, an ordinary lap sweeps white once, and overheat strobes the outer pairs and the sides red. The effects fill a 33-byte GRB buffer once per UI tick, the bytes the firmware would clock out; brightness is a global scale after gamma 2.2. The row's height above the module and the package height are placeholders until the PCB exists.</p>
+    <p><b>The LED bar</b> is 9 × WS2812 in a 2.7 mm package (or the 2.0 mm 2020, switch in the LEDs row) on the main PCB, in a row above the module as wide as the drawing's outline, the outer LEDs' edges flush with its sides, 12.0 mm apart (12.09 with the 2020). Two more sit one each side of the module, level with the middle of the active area, 3 mm out from the outline; they are the outermost ring of every effect. The bar shows the pace delta growing out from the centre, green ahead of best and red behind, 4 LEDs a side for 0.6 s, and the side pair fills in past 0.6 s. Gaining, a glint runs outward along it; losing, it throbs. A slower sector wipes amber, a purple sector wipes purple and twinkles, a best lap chases purple and white, an ordinary lap sweeps white once, and overheat strobes the outer pairs and the sides red. The effects fill a 33-byte GRB buffer once per UI tick, the bytes the firmware would clock out; brightness is a global scale after gamma 2.2. The row's height above the module and the package height are placeholders until the PCB exists.</p>
   </section>
 
   <section class="panel">
@@ -698,8 +701,13 @@ echo(str("Origin shift applied (", origin, "): ", origin_shift()));
   // LED bar on the main PCB (not the module, not in the .scad): 9 × WS2812 in a 2.7 mm package in one row above the
   // module, outer package edges flush with the outline's left and right edges (the drawing's 98.7), on the PCB at the frame's rear face.
   // gap and h are placeholders until the PCB exists.
-  const LEDBAR = { n: 9, size: 2.7, h: 1.0, gap: 3.0 };            // gap: outline top edge → LED centre
-  LEDBAR.pitch = (P.lb_w - LEDBAR.size) / (LEDBAR.n - 1);   // 12.0
+  // Two packages to compare: the 2.7 mm part (height a placeholder) and the WS2812B-2020 (2.0 × 2.0 × 0.84, check the datasheet).
+  const LED_PKG = { '2727': { name: '2.7 mm', size: 2.7, h: 1.0 }, '2020': { name: '2020', size: 2.0, h: 0.84 } };
+  const LEDBAR = { n: 9, gap: 3.0 };                                // gap: outline top edge → LED centre
+  function ledSetPkg(key) {                                         // top row stays flush with the outline: the pitch follows the size
+    Object.assign(LEDBAR, LED_PKG[key], { pkg: key }); LEDBAR.pitch = (P.lb_w - LEDBAR.size) / (LEDBAR.n - 1);   // 12.0 / 12.0875
+  }
+  ledSetPkg('2727');
   const ledX = i => LEDBAR.size / 2 + i * LEDBAR.pitch;  // LED centre, from the outline's left edge
   // plus one LED each side of the module, level with the AA's vertical middle, centre `gap` out from the outline's side.
   // Chain order: 0–8 the top row left to right, 9 the left side, 10 the right side.
@@ -711,7 +719,7 @@ echo(str("Origin shift applied (", origin, "): ", origin_shift()));
   // ------------------------------------------------------------------
   //  Dimension table
   // ------------------------------------------------------------------
-  const rows = [
+  const dimRows = () => [
     ['g', 'Outline (LB)'],
     ['Overall', `${P.lb_w} × ${P.lb_h} × 9.5`, 'W × H ±0.5, thickness to A/K tips ±0.3'],
     ['Frame rear face', `Z = −${f(D.total_t,1)}`, `${P.lcd_t} glass + ${P.lb_t} backlight`],
@@ -738,18 +746,19 @@ echo(str("Origin shift applied (", origin, "): ", origin_shift()));
     ['2 × Ø', `${P.peg_d}`, `${P.peg_x} from each edge, ${f(P.lb_w-2*P.peg_x,1)} apart`],
     ['Length', `${f(P.peg_len,1)} past frame`, `tip at Z = −${f(-D.peg_tip_z,1)}`],
     ['g', 'LED bar (main PCB, not the module)'],
-    [`${LEDBAR.n} × WS2812`, `${LEDBAR.size} sq, pitch ${f(LEDBAR.pitch,3)}`, `centres X ${f(ledX(0),2)} to ${f(ledX(LEDBAR.n - 1),2)}; outer edges flush with the outline`],
-    ['Row', `Y ${f(P.lb_h + LEDBAR.gap,2)}`, `centre ${LEDBAR.gap} above the outline's top edge, ${LEDBAR.h} tall (both placeholders)`],
+    [`${LEDBAR.n} × WS2812 ${LEDBAR.name}`, `${LEDBAR.size} sq, pitch ${f(LEDBAR.pitch,3)}`, `centres X ${f(ledX(0),2)} to ${f(ledX(LEDBAR.n - 1),2)}; outer edges flush with the outline`],
+    ['Row', `Y ${f(P.lb_h + LEDBAR.gap,2)}`, `centre ${LEDBAR.gap} above the outline's top edge (placeholder); ${LEDBAR.h} tall${LEDBAR.pkg === '2020' ? ' (2020 datasheet, check it)' : ' (placeholder)'}`],
     ['Side pair', `X −${f(LEDBAR.gap,2)} / ${f(P.lb_w + LEDBAR.gap,2)}`, `Y ${f(D.aa_cy,2)}, level with the AA's middle; centres ${LEDBAR.gap} out from the outline's sides (placeholder)`]
   ];
   const dimsEl = document.getElementById('dims');
-  rows.forEach(r => {
+  function buildDims() { dimsEl.textContent = ''; dimRows().forEach(r => {
     if (r[0] === 'g') { const g = document.createElement('div'); g.className = 'g'; g.textContent = r[1]; dimsEl.appendChild(g); return; }
     const k = document.createElement('div'); k.className = 'k'; k.textContent = r[0];
     const v = document.createElement('div'); v.className = 'v'; v.textContent = r[1];
     const n = document.createElement('div'); n.className = 'n'; n.textContent = r[2] || '';
     dimsEl.appendChild(k); dimsEl.appendChild(v); dimsEl.appendChild(n);
-  });
+  }); }
+  buildDims();
 
   // ------------------------------------------------------------------
   //  Copy button
@@ -1598,21 +1607,32 @@ echo(str("Origin shift applied (", origin, "): ", origin_shift()));
     const tx = new THREE.CanvasTexture(c); tx.minFilter = THREE.LinearFilter; return tx;
   }
   const haloTex = glowTex(false), flareTex = glowTex(true);
-  const ledZ = -D.total_t, ledTop = ledZ + LEDBAR.h, ledHalf = LEDBAR.size / 2;
+  const ledZ = -D.total_t;
   const ledOff = new THREE.Color(0xe8e4d6);                       // unlit diffuser
   const ledMeshes = [];
   for (let i = 0; i < LEDBAR.total; i++) {
     const g = new THREE.Group(), [x, y] = ledPos(i, false); g.position.set(x, y, 0);
-    g.add(box(-ledHalf, ledHalf, -ledHalf, ledHalf, ledZ, ledTop - 0.02, mat.ledBody, true));
-    const lens = new THREE.Mesh(new THREE.PlaneGeometry(LEDBAR.size - 0.3, LEDBAR.size - 0.3), new THREE.MeshBasicMaterial({ color: ledOff.clone() }));
-    lens.position.z = ledTop;
+    const body = box(-0.5, 0.5, -0.5, 0.5, 0, 1, mat.ledBody, true);           // unit cube, scaled to the package by ledApplyPkg
+    const lens = new THREE.Mesh(new THREE.PlaneGeometry(1, 1), new THREE.MeshBasicMaterial({ color: ledOff.clone() }));
+    g.add(body);
     const halo = new THREE.Sprite(new THREE.SpriteMaterial({ map: haloTex, transparent: true, depthWrite: false }));
     const flare = new THREE.Sprite(new THREE.SpriteMaterial({ map: flareTex, transparent: true, depthWrite: false }));
-    halo.position.z = ledTop + 0.4; flare.position.z = ledTop + 0.45; halo.visible = flare.visible = false;
-    g.add(lens, halo, flare); ledBar.add(g); ledMeshes.push({ g, lens, halo, flare });
+    halo.visible = flare.visible = false;
+    g.add(lens, halo, flare); ledBar.add(g); ledMeshes.push({ g, body, lens, halo, flare });
   }
   // five lights: thirds of the top row, then one per side LED
-  const ledLights = [1, 4, 7, LEDBAR.n, LEDBAR.n + 1].map(i => { const l = new THREE.PointLight(0xffffff, 0, 34, 2); l.position.z = ledTop + 2; ledMeshes[i].g.add(l); return l; });
+  const ledLights = [1, 4, 7, LEDBAR.n, LEDBAR.n + 1].map(i => { const l = new THREE.PointLight(0xffffff, 0, 34, 2); ledMeshes[i].g.add(l); return l; });
+  function ledApplyPkg() {                                        // size, height and top-row pitch from LEDBAR
+    const top = ledZ + LEDBAR.h, s = LEDBAR.size;
+    ledMeshes.forEach((m, i) => {
+      m.body.scale.set(s, s, LEDBAR.h - 0.02); m.body.position.set(0, 0, ledZ + (LEDBAR.h - 0.02) / 2);
+      m.lens.scale.set(s - 0.3, s - 0.3, 1); m.lens.position.z = top;
+      m.halo.position.z = top + 0.4; m.flare.position.z = top + 0.45;
+      if (i < LEDBAR.n) m.g.position.x = ledX(i);
+    });
+    ledLights.forEach(l => { l.position.z = top + 2; });
+  }
+  ledApplyPkg();
   const ledLightOf = i => i < LEDBAR.n ? (i / 3) | 0 : 3 + i - LEDBAR.n;
   function ledPlace(flip) { for (let i = LEDBAR.n; i < LEDBAR.total; i++) ledMeshes[i].g.position.y = ledPos(i, flip)[1]; }
   function ledLook(i) {                                           // LED.buf → how it reads: intensity, hue, camera-ish colour
@@ -1972,6 +1992,11 @@ echo(str("Origin shift applied (", origin, "): ", origin_shift()));
   const ledOnCb = document.getElementById('ledOn'), ledBright = document.getElementById('ledBright'), ledBrightVal = document.getElementById('ledBrightVal');
   ledOnCb.addEventListener('change', () => { LED.on = ledOnCb.checked; ledOnCb.parentElement.classList.toggle('on', ledOnCb.checked); ledFrame(demo.uiNow); });
   ledBright.addEventListener('input', () => { LED.bright = parseInt(ledBright.value, 10) / 100; ledBrightVal.textContent = ledBright.value + ' %'; ledFrame(demo.uiNow); });
+  document.getElementById('ledrow').addEventListener('click', e => {
+    const b = e.target.closest('[data-pkg]'); if (!b) return;
+    ledSetPkg(b.dataset.pkg); ledApplyPkg(); buildDims(); if (real.on) realLayout();
+    document.querySelectorAll('#ledrow [data-pkg]').forEach(x => x.setAttribute('aria-pressed', String(x === b)));
+  });
   const flipCb = document.getElementById('flip');
   flipCb.addEventListener('change', () => { demoOpts.flip = flipCb.checked; aaMat.uniforms.uFlip.value = flipCb.checked ? 1 : 0; flipCb.parentElement.classList.toggle('on', flipCb.checked); buildLut();
     for (const m of [vaPlane, aaPlane, gapPlane]) m.rotation.z = flipCb.checked ? Math.PI : 0;   // image mirrored back upright, as the UC1608 would

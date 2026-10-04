@@ -145,7 +145,11 @@ layout inside `fbFill`/`fbPx`, and emit `F57` and `LOGO_SRC` as `const uint8_t[]
   on `prefers-color-scheme` changes or a `data-theme` attribute change.
 - `LEDBAR` (next to `P`) places the LEDs: the top row is 9 in a 2.7 mm package, outer
   package edges flush with the outline (the drawing's 98.7), so pitch =
-  (98.7 − 2.7) / 8 = 12.0 mm. The side pair (`ledPos`) sits level with the AA's vertical
+  (98.7 − 2.7) / 8 = 12.0 mm. `LED_PKG` holds the packages the LEDs row switches between:
+  the 2.7 mm part and the WS2812B-2020 (2.0 × 2.0 × 0.84 from memory of its datasheet;
+  check it). `ledSetPkg` keeps the top row flush with the outline, so the 2020's pitch is
+  (98.7 − 2.0) / 8 = 12.0875; `ledApplyPkg` rescales the unit-cube bodies and lenses and
+  `buildDims` refreshes the dimension table. The side pair (`ledPos`) sits level with the AA's vertical
   middle, centres `gap` out from the outline's sides. `gap` (3.0, used for the top row and
   the sides) and `h` (1.0) are placeholders until the PCB exists. The LEDs sit on the PCB
   plane (the frame's rear face) and are children of the scene rather than the module, so
