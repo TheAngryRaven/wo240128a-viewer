@@ -277,6 +277,9 @@ h1{border-left:4px solid var(--accent);padding-left:12px}
       <span class="sep"></span>
       <button class="chip" data-layout="A" aria-pressed="false">7 top + 2 + 2</button>
       <button class="chip" data-layout="B" aria-pressed="true">5 top + 3 + 3</button>
+      <span class="sep"></span>
+      <button class="chip" data-pace="pip" aria-pressed="true">Pace pip</button>
+      <button class="chip" data-pace="bar" aria-pressed="false">Pace bar</button>
       <div class="slider">
         <input type="range" id="ledBright" min="5" max="100" step="5" value="40" aria-label="LED brightness in percent">
         <span class="val" id="ledBrightVal">40 %</span>
@@ -330,7 +333,7 @@ h1{border-left:4px solid var(--accent);padding-left:12px}
       <li><b>Timekeeper</b> is time-centric: big lap time, sector boxes in the header. Boot: logo spin-in, name, fly-to-header, gauge sweep, dissolve. Purple: strobe, 1-px shake, badge, sparkles. Best lap: banner.</li>
       <li><b>Pace</b> is for the driver mid-session: a 32-block RPM ladder, a 56-px RPM number, pace delta with trend, EGT and water thermometers with their target bands at the edges, lap times demoted to one strip, an icon row. Boot: the logo coalesces from a swarm of 860 particles, the name bounces in, a CRT collapse to a line, the dash CRT-expands, ladder self-test, slot-machine digits. Purple: row glitch, diagonal sweep, a sector chip drops from the ladder. Best lap: expanding rings, a checkered flag waves through the lap strip, the time slams in. Overheat: the EGT bar blinks, a warning chip drops, a flame joins the icon row.</li>
     </ul>
-    <p><b>The LEDs</b> are 11 × WS2812B-2020 (2.0 mm; the LEDs row switches to the 5.0 mm 5050 for comparison) on the main PCB. The top row is laid out on 7 positions spanning the drawing's outline, the outer ones' edges flush with its sides, 16.12 mm apart; the side columns sit 5 mm out from the outline, level with the active area's edges and middle. Two layouts: <b>5 top + 3 + 3</b> uses the middle 5 top positions and puts three LEDs down each side (AA top, middle, bottom); <b>7 top + 2 + 2</b> uses all 7 on top and two per side (AA middle, bottom). The chain runs up the left column, along the top, down the right. The pace delta grows out from the centre, green ahead of best and red behind: the top row for 0.6 s, then down the sides to 1.2 s. Gaining, a glint runs outward; losing, it throbs. A slower sector wipes amber, a purple sector wipes purple and twinkles, a best lap chases purple and white along the chain, an ordinary lap sweeps white right to left, and overheat strobes red on the hot gauge's side (EGT: the left column and the two left-most top LEDs). The effects fill a 33-byte GRB buffer once per UI tick, the bytes the firmware would clock out; brightness is a global scale after gamma 2.2. The top row's height and the side columns' distance are placeholders until the PCB exists.</p>
+    <p><b>The LEDs</b> are 11 × WS2812B-2020 (2.0 mm; the LEDs row switches to the 5.0 mm 5050 for comparison) on the main PCB. The top row is laid out on 7 positions spanning the drawing's outline, the outer ones' edges flush with its sides, 16.12 mm apart; the side columns sit 5 mm out from the outline, level with the active area's edges and middle. Two layouts: <b>5 top + 3 + 3</b> uses the middle 5 top positions and puts three LEDs down each side (AA top, middle, bottom); <b>7 top + 2 + 2</b> uses all 7 on top and two per side (AA middle, bottom). The chain runs up the left column, along the top, down the right. The LEDs have roles. The <b>top row shows pace</b>, in one of two modes (LEDs row): <b>Pace pip</b>, the prototype's behaviour, is a single pip that steps one LED per 0.25 s from the centre (centre = on pace, right and green = faster, left and red = slower, the end pip blinks past the last step) with 0.1 s of hysteresis and a short fading trail as it moves; <b>Pace bar</b> grows out from the centre, the whole row for 0.6 s, with a glint while gaining and a throb while losing. A slower sector wipes amber and an ordinary lap sweeps white, both on the top row. The <b>side columns are status LEDs</b>, dark unless something needs you: grip loss breathes amber, overheat strobes red on the hot gauge's side for as long as it is over the warning temperature (EGT left, water right), and on the rev limiter (14,500) the bottom LED each side flashes blue. <b>Purple sectors and best laps are global alerts</b> and use every LED: a white-edged purple wipe with twinkles, and a purple and white chase along the chain. The effects fill a 33-byte GRB buffer once per UI tick, the bytes the firmware would clock out; brightness is a global scale after gamma 2.2. The top row's height and the side columns' distance are placeholders until the PCB exists.</p>
   </section>
 
   <section class="panel">
@@ -1283,64 +1286,84 @@ h1{border-left:4px solid var(--accent);padding-left:12px}
   //      and then the global brightness, so fades look even on the real part. ----
   // chain: up the left column, the top row left to right, down the right column (see ledPoints). The UI core only needs
   // each LED's ring out from the centre, its side and its X; a firmware build would bake these tables in.
-  const LED = { n: 11, rings: 0, ringMax: 0, on: true, bright: 0.4, buf: new Uint8Array(33) };
-  let LED_RING = [], LED_SIDE = [], LED_X = [], ledV = new Float32Array(33);   // ledV: working frame, RGB, perceptual 0..1
+  // Roles: the top row shows pace; the side columns are status LEDs (grip, overheat, rev limit); purple sectors and best
+  // laps are global alerts and use every LED.
+  const LED = { n: 11, rings: 0, ringMax: 0, on: true, bright: 0.4, buf: new Uint8Array(33), pace: 'pip', pip: 0, pipFrom: 0, pipT: -1e9 };
+  let LED_RING = [], LED_SIDE = [], LED_X = [], LED_POS = [], ledV = new Float32Array(33);   // ledV: working frame, RGB, perceptual 0..1
   function ledSetLayout(layout) {
     const pts = ledPoints(false, layout);
     LED.n = pts.length; LED_RING = pts.map(q => q.ring); LED_SIDE = pts.map(q => q.s); LED_X = pts.map(q => q.x);
+    LED_POS = pts.map(q => q.s !== 'T' ? null : q.x > P.lb_w / 2 + 1 ? q.ring : -q.ring);   // top row: signed steps from the centre, + to the right
     LED.rings = Math.max(...pts.filter(q => q.s === 'T').map(q => q.ring)); LED.ringMax = Math.max(...LED_RING);
     LED.buf = new Uint8Array(LED.n * 3); ledV = new Float32Array(LED.n * 3);
   }
   ledSetLayout(LEDBAR.layout);
   const LED_GREEN = [0.08, 1, 0.22], LED_RED = [1, 0.06, 0.03], LED_PURPLE = [0.62, 0.22, 1], LED_AMBER = [1, 0.5, 0];
-  const LED_WHITE = [1, 0.9, 0.82], LED_GLINT = [0.75, 1, 0.8], LED_SPARK = [0.92, 0.8, 1];
+  const LED_WHITE = [1, 0.9, 0.82], LED_GLINT = [0.75, 1, 0.8], LED_SPARK = [0.92, 0.8, 1], LED_BLUE = [0.1, 0.35, 1];
+  const isTop = i => LED_SIDE[i] === 'T';
   function ledMix(i, c, k, w) {                                   // blend colour c at level k into LED i, weight w
     if (i < 0 || i >= LED.n || w <= 0) return; const o = i * 3, a = Math.min(1, w);
     for (let ch = 0; ch < 3; ch++) ledV[o + ch] += (c[ch] * k - ledV[o + ch]) * a;
   }
-  function ledRing(s, c, k, w) { for (let i = 0; i < LED.n; i++) if (LED_RING[i] === s) ledMix(i, c, k, w); }
-  function ledPace(now) {                                         // delta to best, out from the centre: top row = 0.6 s, sides to 1.2 s
+  function ledRing(s, c, k, w) { for (let i = 0; i < LED.n; i++) if (LED_RING[i] === s && isTop(i)) ledMix(i, c, k, w); }   // top row only
+  function ledPace(now) { if (LED.pace === 'pip') ledPacePip(now); else ledPaceBar(now); }
+  function ledPacePip(now) {                                      // the prototype: one pip, centre = on pace, a step per 0.25 s, right = faster
+    const x = -sim.delta / 250, R = LED.rings;
+    if (x > LED.pip + 0.6 || x < LED.pip - 0.6) {                 // 0.1 s of hysteresis past each half-step, so it doesn't chatter
+      const np = Math.max(-R, Math.min(R, Math.round(x)));
+      if (np !== LED.pip) { LED.pipFrom = LED.pip; LED.pip = np; LED.pipT = now; }
+    }
+    const hue = s => s > 0 ? LED_GREEN : s < 0 ? LED_RED : LED_WHITE, c = hue(LED.pip), a = now - LED.pipT;
+    const land = a < 160 ? 1 : 0.7, beyond = Math.abs(x) > R + 0.6 && ((now / 125) | 0) & 1;   // off the end: the end pip blinks
+    for (let i = 0; i < LED.n; i++) {
+      if (LED_POS[i] === LED.pip && !beyond) ledMix(i, c, land, 1);
+      else if (LED_POS[i] === LED.pipFrom && a < 150) ledMix(i, hue(LED.pipFrom), 0.45 * (1 - a / 150), 1);   // short fading trail: the bounce
+    }
+  }
+  function ledPaceBar(now) {                                      // the bar: delta grows out from the centre, the top row = 0.6 s
     const d = sim.delta, mag = Math.min(1, Math.abs(d) / 600) * LED.rings, c = d < 0 ? LED_GREEN : LED_RED;
     if (Math.abs(d) < 40) { ledRing(0, LED_WHITE, 0.22, 1); return; }            // dead on: dim white centre pip
     let base = 0.6;
     if (d > 0 && sim.trend > 30) base *= 0.78 + 0.22 * Math.sin(now / 160);      // behind and still losing: throb
-    const sideRings = LED.ringMax - LED.rings, off = clamp01((Math.abs(d) - 600) / 600) * sideRings;   // past the top row: down the sides
-    for (let s = 0; s <= LED.ringMax; s++) ledRing(s, c, base * (s === 0 ? 1 : s > LED.rings ? clamp01(off - (s - LED.rings - 1)) : clamp01(mag - (s - 1))), 1);
+    for (let s = 0; s <= LED.rings; s++) ledRing(s, c, base * (s === 0 ? 1 : clamp01(mag - (s - 1))), 1);
     if (d < 0 && sim.trend < -30) {                               // ahead and gaining: a glint runs outward along the lit bar
-      const pos = (now % 650) / 650 * (LED.ringMax + 1.5), last = off > 0 ? LED.rings + Math.ceil(off) : Math.ceil(mag);
-      for (let s = 0; s <= last; s++) ledRing(s, LED_GLINT, 1, Math.max(0, 1 - Math.abs(pos - s) * 1.6) * 0.85);
+      const pos = (now % 650) / 650 * (LED.rings + 1.5);
+      for (let s = 0; s <= Math.ceil(mag); s++) ledRing(s, LED_GLINT, 1, Math.max(0, 1 - Math.abs(pos - s) * 1.6) * 0.85);
     }
   }
   function ledFx(now) {                                           // events layered over the pace bar, newest last
     for (const e of fx) {
       const a = now - e.t0; if (a < 0) continue;
-      if (e.type === 'sector' && a < 900) {                       // slower than best: amber wipe out from the centre
-        const r = ease.outCubic(clamp01(a / 320)) * (LED.ringMax + 1), fade = 1 - clamp01((a - 450) / 450);
-        for (let i = 0; i < LED.n; i++) if (LED_RING[i] < r) ledMix(i, LED_AMBER, 0.85, fade);
-      } else if (e.type === 'purple' && a < 1800) {               // purple: white-edged wipe, twinkle, fade
+      if (e.type === 'sector' && a < 900) {                       // slower than best: amber wipe out from the centre, top row only
+        const r = ease.outCubic(clamp01(a / 320)) * (LED.rings + 1), fade = 1 - clamp01((a - 450) / 450);
+        for (let i = 0; i < LED.n; i++) if (isTop(i) && LED_RING[i] < r) ledMix(i, LED_AMBER, 0.85, fade);
+      } else if (e.type === 'purple' && a < 1800) {               // purple (global alert, every LED): white-edged wipe, twinkle, fade
         const r = ease.outCubic(clamp01(a / 380)) * (LED.ringMax + 1), fade = 1 - clamp01((a - 1450) / 350), slot = (a / 55) | 0;
         for (let i = 0; i < LED.n; i++) {
           const dist = LED_RING[i]; if (dist >= r) continue;
           const spark = (a < 380 && r - dist < 1.2) || (a >= 380 && hash2(i * 31 + e.seed, slot) > 0.72);
           ledMix(i, spark ? LED_SPARK : LED_PURPLE, spark ? 1 : 0.8, fade);
         }
-      } else if (e.type === 'lap' && e.best && a < 2200) {        // best lap: purple / white chase along the chain (up, across, down), then fade
+      } else if (e.type === 'lap' && e.best && a < 2200) {        // best lap (global alert): purple / white chase along the chain (up, across, down), then fade
         const fade = 1 - clamp01((a - 1800) / 400), step = (a / 70) | 0;
         for (let i = 0; i < LED.n; i++) { const w = (i + step) % 3 === 0; ledMix(i, w ? LED_WHITE : LED_PURPLE, w ? 1 : 0.85, fade); }
-      } else if (e.type === 'lap' && !e.best && a < 600) {        // ordinary lap: one white sweep, right to left like the flag
-        const x0 = P.lb_w + LEDBAR.side + 16, x = x0 - (x0 + LEDBAR.side + 16) * (a / 600);   // mm, right edge → left edge
-        for (let i = 0; i < LED.n; i++) ledMix(i, LED_WHITE, 0.9, Math.max(0, 1 - Math.abs(LED_X[i] - x) / 16));
-      } else if (e.type === 'overheat' && a < 2400) {             // over temperature: strobe red on the gauge's side of the screen
-        const on = ((a / 125) | 0) & 1 ? 0 : 1;                  // EGT is drawn on the left, water on the right
-        const s = e.gauge === 'h2o' ? 'R' : 'L', tops = LED_SIDE.map((q, i) => q === 'T' ? i : -1).filter(i => i >= 0);
-        for (let i = 0; i < LED.n; i++) if (LED_SIDE[i] === s) ledMix(i, LED_RED, on, 1);      // the whole side column…
-        for (const i of s === 'L' ? tops.slice(0, 2) : tops.slice(-2)) ledMix(i, LED_RED, on, 1);   // …and the two nearest top LEDs
-      }
+      } else if (e.type === 'lap' && !e.best && a < 600) {        // ordinary lap: one white sweep along the top row, right to left like the flag
+        const x0 = P.lb_w + 16, x = x0 - (x0 + 16) * (a / 600);  // mm, right end → left end
+        for (let i = 0; i < LED.n; i++) if (isTop(i)) ledMix(i, LED_WHITE, 0.9, Math.max(0, 1 - Math.abs(LED_X[i] - x) / 16));
+      }                                                           // overheat is a state, drawn by ledStatus
     }
   }
-  function ledGrip(now) {                                         // grip going: the side columns breathe amber under the events
+  function ledGrip(now) {                                         // grip going: the side columns breathe amber (under the global alerts)
     const k = 0.3 + 0.45 * (0.5 + 0.5 * Math.sin(now / 260));
-    for (let i = 0; i < LED.n; i++) if (LED_SIDE[i] !== 'T') ledMix(i, LED_AMBER, k, 1);
+    for (let i = 0; i < LED.n; i++) if (!isTop(i)) ledMix(i, LED_AMBER, k, 1);
+  }
+  function ledStatus(now) {                                       // status LEDs, over everything: these are warnings
+    const on = ((now / 125) | 0) & 1 ? 0 : 1, hot = { L: sim.egt > EGT.warn, R: sim.water > H2O.warn };   // EGT is drawn left, water right
+    for (let i = 0; i < LED.n; i++) if (!isTop(i) && hot[LED_SIDE[i]]) ledMix(i, LED_RED, on, 1);     // overheat: that side's column strobes red
+    if (sim.rpm >= RPMB.over) {                                   // on the limiter: the bottom LED each side flashes blue
+      const fl = ((now / 60) | 0) & 1 ? 0 : 1;
+      for (let i = 0; i < LED.n; i++) if (!isTop(i) && LED_RING[i] === LED.ringMax) ledMix(i, LED_BLUE, fl, 1);
+    }
   }
   function ledBoot(now) {                                         // boot: a purple comet running the chain end to end and back
     const m = (LED.n - 1) / 2, x = m - (m + 1) * Math.cos((now - ui.bootT0) / 260);
@@ -1348,7 +1371,7 @@ h1{border-left:4px solid var(--accent);padding-left:12px}
   }
   function ledFrame(now) {
     ledV.fill(0);
-    if (LED.on) { if (ui.mode === 'boot') ledBoot(now); else { ledPace(now); if (sim.gripLoss) ledGrip(now); ledFx(now); } }
+    if (LED.on) { if (ui.mode === 'boot') ledBoot(now); else { ledPace(now); if (sim.gripLoss) ledGrip(now); ledFx(now); ledStatus(now); } }
     for (let i = 0; i < LED.n; i++) {
       const o = i * 3;
       for (let ch = 0; ch < 3; ch++) LED.buf[o + [1, 0, 2][ch]] = Math.round(255 * LED.bright * Math.pow(clamp01(ledV[o + ch]), 2.2));   // R,G,B → G,R,B
@@ -1975,7 +1998,8 @@ h1{border-left:4px solid var(--accent);padding-left:12px}
   ledOnCb.addEventListener('change', () => { LED.on = ledOnCb.checked; ledOnCb.parentElement.classList.toggle('on', ledOnCb.checked); ledFrame(demo.uiNow); });
   ledBright.addEventListener('input', () => { LED.bright = parseInt(ledBright.value, 10) / 100; ledBrightVal.textContent = ledBright.value + ' %'; ledFrame(demo.uiNow); });
   document.getElementById('ledrow').addEventListener('click', e => {
-    const b = e.target.closest('[data-pkg], [data-layout]'); if (!b) return;
+    const b = e.target.closest('[data-pkg], [data-layout], [data-pace]'); if (!b) return;
+    if (b.dataset.pace) { LED.pace = b.dataset.pace; ledFrame(demo.uiNow); document.querySelectorAll('#ledrow [data-pace]').forEach(x => x.setAttribute('aria-pressed', String(x === b))); return; }
     if (b.dataset.pkg) ledSetPkg(b.dataset.pkg);
     else { LEDBAR.layout = b.dataset.layout; ledSetLayout(LEDBAR.layout); ledFrame(demo.uiNow); }
     ledLayout(); buildDims(); if (real.on) realLayout();
