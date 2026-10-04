@@ -75,6 +75,19 @@ version will be, with no browser APIs beyond `Math`:
   Every animation takes `now` in ms; nothing counts frames.
 - **Session sim** `sim` + `simStep`: a direct-drive kart lap with corners, three sectors,
   session bests, delta vs best. `endSector` / `endLap` push events into `fx`.
+- **Theme C "Thermal"** (default): `drawTempC` (2× name, 32-px value, 14-px bar with band
+  notches, peak flag, trend arrow, COLD / HIGH / HOT, whole-panel flip at warn), `drawLapC`
+  (solid lap counter, 42-px digits, sector boxes; a new lap rolls in three steps),
+  `thermalSample` / `drawTraceC` (RPM sweep trace: a write head writes one column every 75 ms,
+  so each column changes once per 6-s sweep), `drawStatusC` (last lap and race clock only),
+  `drawMidC` / `drawGripC` (grip loss: hazard-stripe wipe, skidding tyre, GRIP %, 6-block
+  meter, GRIP OK on recovery), `drawFxC` (sector and purple cards that open and close about the
+  centre in three 80-ms steps, best-lap frames and card), `postFxC` (whole-screen flash, 2-px
+  shake), `renderBootC` (logo fills with heat in six steps, flash, name, heat bar, shutters,
+  gauge self-test). Drawn for the glass: no stroke under 2 px, motion that steps and holds,
+  shown temperatures / RPM / grip held for 400 ms (`TH_HOLD`), alarms blinking at 1.25 Hz.
+  `sim.race` is the race clock; `sim.grip` / `sim.gripLoss` stand in for the NPU's tyre model
+  (the Grip loss toggle; Timekeeper and Pace ignore it).
 - **Theme A "Timekeeper"**: `drawHeader`, `drawBigTime`, `drawSpeedDelta`, `drawRpm`,
   `drawStatus`, `drawFxA` (purple badge + sparkles, sector fill, best-lap banner),
   `postFxA` (strobe, shake), `renderBootA` (spin-in, name, fly-to-header, gauge sweep,
