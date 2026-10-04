@@ -86,7 +86,16 @@ version will be, with no browser APIs beyond `Math`:
   ladder, diagonal sweep, rings, checkered-flag wave, best-lap slam), `postFxB`
   (`glitchRows`), `renderBootB` (particle swarm, bouncing letters, `squeezeY` CRT
   collapse/expand, ladder self-test, slot-machine digits).
-- `window.perchDemo` exposes `sim`, `fx`, `ui`, `fb` and the event functions for poking
+- **LED bar** (`LED`, `ledFrame`, `ledPace`, `ledFx`, `ledBoot`): 9 × WS2812 above the
+  module. `ledFrame(now)` runs at the end of every `renderFrame` and fills `LED.buf`, 27
+  bytes in WS2812 wire order (G, R, B), which is exactly what the firmware clocks out.
+  Effects mix in perceptual 0..1 (`ledMix`); the conversion applies gamma 2.2 and then
+  `LED.bright`. Pace: the delta to best grows out from the centre LED, green ahead and red
+  behind, 4 LEDs a side = 0.6 s, a dim white pip inside ±40 ms; a glint runs outward while
+  gaining and the bar throbs while losing. Events: sector (amber wipe), purple (white-edged
+  purple wipe, then twinkle), best lap (purple/white chase), lap (one white sweep right to
+  left), overheat (outer pairs strobe red), boot (purple comet).
+- `window.perchDemo` exposes `sim`, `fx`, `ui`, `fb`, `LED` and the event functions for poking
   from the console (`perchDemo.sim.bestLap = 70000` then press Lap forces a best lap).
 - **Scheduler**: `uiTick(step)` is called a fixed number of times per second from the
   page loop; `updateLcd` then models the FSTN response per displayed frame.
@@ -129,6 +138,15 @@ layout inside `fbFill`/`fbPx`, and emit `F57` and `LOGO_SRC` as `const uint8_t[]
 - Theme colours are CSS tokens on `:root` (light) with dark overrides; `applyTheme()`
   copies the 3D-relevant ones (background, grid, edge, VA/AA) into the scene and re-runs
   on `prefers-color-scheme` changes or a `data-theme` attribute change.
+- `LEDBAR` (next to `P`) places the LED bar: 9 LEDs in a 2.7 mm package, outer package
+  edges flush with the outline (the drawing's 98.7), so pitch = (98.7 − 2.7) / 8 = 12.0 mm;
+  `gap` (outline top edge → LED centre, 3.0) and `h` (1.0) are placeholders until the PCB
+  exists. The bar sits
+  on the PCB plane (the frame's rear face), is a child of the scene rather than the module
+  so it stays put for the 6 o'clock mount, and moves with the pins in the exploded view.
+  `ledShow` turns `LED.buf` into lens colour, a halo sprite, a glint sprite above ~86 %
+  of the commanded level, and three point lights that tint the module's top edge. Actual
+  size draws the same row as DOM squares.
 
 ## Feeding it a framebuffer from firmware
 

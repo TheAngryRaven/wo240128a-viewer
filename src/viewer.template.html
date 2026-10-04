@@ -75,6 +75,7 @@ h1 small{font-family:var(--font-body);font-weight:400;font-size:.5em;color:var(-
 .mod > *{position:absolute;display:block}
 .m-glass{background:#d9ece6;box-shadow:inset 0 0 0 1px rgba(0,0,0,.14)}
 .m-aa{image-rendering:pixelated;image-rendering:crisp-edges}
+.m-led{background:#e8e4d6;box-shadow:inset 0 0 0 1px rgba(0,0,0,.2);border-radius:1px}
 .scalebar{display:flex;flex-direction:column;align-items:flex-start;gap:4px;font-family:var(--font-mono);font-size:12px;color:var(--muted)}
 .scalebar i{display:block;height:6px;border:1.5px solid var(--fg);border-top:0}
 .realcal{padding:14px 16px 18px;border-top:1px solid var(--line);background:var(--surface);display:flex;flex-direction:column;gap:12px;position:sticky;left:0}
@@ -265,6 +266,14 @@ h1{border-left:4px solid var(--accent);padding-left:12px}
         <span class="val" id="tempVal"></span>
       </div>
     </div>
+    <div class="row" id="ledrow">
+      <span class="lbl">LEDs</span>
+      <label class="chip on"><input type="checkbox" id="ledOn" checked><span class="sw"></span>9 × WS2812 lit</label>
+      <div class="slider">
+        <input type="range" id="ledBright" min="5" max="100" step="5" value="40" aria-label="LED brightness in percent">
+        <span class="val" id="ledBrightVal">40 %</span>
+      </div>
+    </div>
     <div class="row" id="screens">
       <span class="lbl">Screen</span>
       <button class="chip" data-screen="live" aria-pressed="true">Live UI</button>
@@ -290,6 +299,7 @@ h1{border-left:4px solid var(--accent);padding-left:12px}
       <label class="chip on"><input type="checkbox" data-part="pegs" checked><span class="sw"></span>Pegs</label>
       <label class="chip on"><input type="checkbox" data-part="chip" checked><span class="sw"></span>UC1608</label>
       <label class="chip"><input type="checkbox" data-part="tape"><span class="sw"></span>Pull tape</label>
+      <label class="chip on"><input type="checkbox" data-part="rgb" checked><span class="sw"></span>LED bar</label>
     </div>
     <div class="row" id="opts">
       <span class="lbl">Show</span>
@@ -305,11 +315,12 @@ h1{border-left:4px solid var(--accent);padding-left:12px}
     <p>The screen is a hand-rolled 1-bit renderer, no library: a 240 × 128 framebuffer with clip rectangle, fill / rect / invert / dither primitives, a 5 × 7 bitmap font, a parametric seven-segment font drawn from rectangles at any height, and a transform blit (scale + rotate by inverse mapping) used for the logo. Every animation is a tween in milliseconds, so the UI tick rate only changes smoothness, never timing. The loop is fixed-step: pick a rate above and the renderer runs exactly that many ticks per second. Written as the C it will become, with integer pixel math.</p>
     <p><b>Why 30:</b> a full frame is 3840 bytes, about 8 ms on the UC1608's SPI at 4 MHz and well under a millisecond of M33 time to draw, so the bus and the CPU are not the limit. The glass is: the datasheet gives 200 ms to darken and 250 ms to clear (10–90 %, typical, 25 °C; 300 / 350 max), so anything faster than ~20 updates per second only smears. 15 fps is visibly steppy on the RPM bar; 60 buys nothing the glass can show.</p>
     <p><b>The panel row:</b> each dot is a first-order lag with time constants set from those datasheet figures, scaled with temperature by an Arrhenius law for the liquid crystal's viscosity (about 3× slower at 0 °C, 9× at −20 °C, 0.4× at 50 °C; the temperature law is a textbook estimate, not a Winstar figure), and mixed in linear light. "5:1 contrast" renders the datasheet's typical contrast ratio instead of ink black, with the dark state's slate-blue tint sampled from Winstar's product photo of this module, which itself measures about 5:1. "Viewing angle" fades contrast with the angle between your eye and the glass using the datasheet's CR ≥ 2 limits (30° toward 12 o'clock, 60° toward 6, 45° sideways; the fall-off curve between those points is a guess), and the readout in the corner gives the angle and the contrast at the panel centre. "Mount 6 o'clock up" is the trick of fitting the glass rotated 180° and mirroring the image in the UC1608, so the strong side faces a driver looking down at the dash: compare the Driver view with it on and off. The stat is JavaScript time on this device: the raster into the framebuffer, and the panel simulation, which is the expensive part here and does not exist on the device.</p>
-    <p>The session runs a simulated direct-drive 2T kart lap at 4× speed with three sectors, EGT that follows load with a lag, and water that creeps. Two themes share the core and the events, and render them differently:</p>
+    <p>The session runs a simulated direct-drive 2T kart lap with three sectors (Session ×4 runs it at 4× and fires sectors and laps by itself), EGT that follows load with a lag, and water that creeps. Two themes share the core and the events, and render them differently:</p>
     <ul>
       <li><b>Timekeeper</b> is time-centric: big lap time, sector boxes in the header. Boot: logo spin-in, name, fly-to-header, gauge sweep, dissolve. Purple: strobe, 1-px shake, badge, sparkles. Best lap: banner.</li>
       <li><b>Pace</b> is for the driver mid-session: a 32-block RPM ladder, a 56-px RPM number, pace delta with trend, EGT and water thermometers with their target bands at the edges, lap times demoted to one strip, an icon row. Boot: the logo coalesces from a swarm of 860 particles, the name bounces in, a CRT collapse to a line, the dash CRT-expands, ladder self-test, slot-machine digits. Purple: row glitch, diagonal sweep, a sector chip drops from the ladder. Best lap: expanding rings, a checkered flag waves through the lap strip, the time slams in. Overheat: the EGT bar blinks, a warning chip drops, a flame joins the icon row.</li>
     </ul>
+    <p><b>The LED bar</b> is 9 × WS2812 in a 2.7 mm package on the main PCB, in a row above the module as wide as the drawing's outline, the outer LEDs' edges flush with its sides, 12.0 mm apart. It shows the pace delta as a bar growing out from the centre, green ahead of best and red behind, 4 LEDs a side for 0.6 s. Gaining, a glint runs outward along it; losing, it throbs. A slower sector wipes amber, a purple sector wipes purple and twinkles, a best lap chases purple and white, an ordinary lap sweeps white once, and overheat strobes the outer pairs red. The effects fill a 27-byte GRB buffer once per UI tick, the bytes the firmware would clock out; brightness is a global scale after gamma 2.2. The row's height above the module and the package height are placeholders until the PCB exists.</p>
   </section>
 
   <section class="panel">
@@ -394,6 +405,12 @@ h1{border-left:4px solid var(--accent);padding-left:12px}
   D.led_tip_z = -(D.total_t + P.led_pin_len);
   D.peg_tip_z = -(D.total_t + P.peg_len);
   const pinX = n => P.pin1_x + (n - 1) * P.pin_pitch;
+  // LED bar on the main PCB (not the module, not in the .scad): 9 × WS2812 in a 2.7 mm package in one row above the
+  // module, outer package edges flush with the outline's left and right edges (the drawing's 98.7), on the PCB at the frame's rear face.
+  // gap and h are placeholders until the PCB exists.
+  const LEDBAR = { n: 9, size: 2.7, h: 1.0, gap: 3.0 };            // gap: outline top edge → LED centre
+  LEDBAR.pitch = (P.lb_w - LEDBAR.size) / (LEDBAR.n - 1);   // 12.0
+  const ledX = i => LEDBAR.size / 2 + i * LEDBAR.pitch;  // LED centre, from the outline's left edge
   const f = (x, d) => (Math.round(x * Math.pow(10, d)) / Math.pow(10, d)).toFixed(d);
 
   // ------------------------------------------------------------------
@@ -424,7 +441,10 @@ h1{border-left:4px solid var(--accent);padding-left:12px}
     ['Length', `${P.led_pin_len} past frame`, `tip at Z = −${f(-D.led_tip_z,1)} (overall)`],
     ['g', 'Locating pegs'],
     ['2 × Ø', `${P.peg_d}`, `${P.peg_x} from each edge, ${f(P.lb_w-2*P.peg_x,1)} apart`],
-    ['Length', `${f(P.peg_len,1)} past frame`, `tip at Z = −${f(-D.peg_tip_z,1)}`]
+    ['Length', `${f(P.peg_len,1)} past frame`, `tip at Z = −${f(-D.peg_tip_z,1)}`],
+    ['g', 'LED bar (main PCB, not the module)'],
+    [`${LEDBAR.n} × WS2812`, `${LEDBAR.size} sq, pitch ${f(LEDBAR.pitch,3)}`, `centres X ${f(ledX(0),2)} to ${f(ledX(LEDBAR.n - 1),2)}; outer edges flush with the outline`],
+    ['Row', `Y ${f(P.lb_h + LEDBAR.gap,2)}`, `centre ${LEDBAR.gap} above the outline's top edge, ${LEDBAR.h} tall (both placeholders)`]
   ];
   const dimsEl = document.getElementById('dims');
   rows.forEach(r => {
@@ -1016,11 +1036,72 @@ h1{border-left:4px solid var(--accent);padding-left:12px}
     text57(120 - (width57('240 X 128', 2) >> 1), 50, '240 X 128', 1, 2);
     text57(120 - (width57('0.35 MM PITCH', 1) >> 1), 72, '0.35 MM PITCH', 1);
   }
+  // ---- LED bar: 9 × WS2812, GRB on the wire. ledFrame() runs once per UI tick and fills LED.buf, the 27 bytes the
+  //      firmware clocks out (~0.3 ms at 800 kHz). Effects work in perceptual 0..1; the conversion applies gamma 2.2
+  //      and then the global brightness, so fades look even on the real part. ----
+  const LED = { n: 9, mid: 4, on: true, bright: 0.4, buf: new Uint8Array(27) };
+  const ledV = new Float32Array(27);                              // working frame, RGB, perceptual 0..1
+  const LED_GREEN = [0.08, 1, 0.22], LED_RED = [1, 0.06, 0.03], LED_PURPLE = [0.62, 0.22, 1], LED_AMBER = [1, 0.5, 0];
+  const LED_WHITE = [1, 0.9, 0.82], LED_GLINT = [0.75, 1, 0.8], LED_SPARK = [0.92, 0.8, 1];
+  function ledMix(i, c, k, w) {                                   // blend colour c at level k into LED i, weight w
+    if (i < 0 || i >= LED.n || w <= 0) return; const o = i * 3, a = Math.min(1, w);
+    for (let ch = 0; ch < 3; ch++) ledV[o + ch] += (c[ch] * k - ledV[o + ch]) * a;
+  }
+  function ledPace(now) {                                         // delta to best, growing out from the centre
+    const d = sim.delta, mag = Math.min(1, Math.abs(d) / 600) * LED.mid, c = d < 0 ? LED_GREEN : LED_RED;
+    if (Math.abs(d) < 40) { ledMix(LED.mid, LED_WHITE, 0.22, 1); return; }       // dead on: dim white centre pip
+    let base = 0.6;
+    if (d > 0 && sim.trend > 30) base *= 0.78 + 0.22 * Math.sin(now / 160);      // behind and still losing: throb
+    ledMix(LED.mid, c, base, 1);
+    for (let s = 1; s <= LED.mid; s++) { const fill = clamp01(mag - (s - 1)); ledMix(LED.mid - s, c, base * fill, 1); ledMix(LED.mid + s, c, base * fill, 1); }
+    if (d < 0 && sim.trend < -30) {                               // ahead and gaining: a glint runs outward along the lit bar
+      const pos = (now % 650) / 650 * (LED.mid + 1.5);
+      for (let s = 0; s <= Math.ceil(mag); s++) { const g = Math.max(0, 1 - Math.abs(pos - s) * 1.6) * 0.85; ledMix(LED.mid - s, LED_GLINT, 1, g); if (s) ledMix(LED.mid + s, LED_GLINT, 1, g); }
+    }
+  }
+  function ledFx(now) {                                           // events layered over the pace bar, newest last
+    for (const e of fx) {
+      const a = now - e.t0; if (a < 0) continue;
+      if (e.type === 'sector' && a < 900) {                       // slower than best: amber wipe out from the centre
+        const r = ease.outCubic(clamp01(a / 320)) * (LED.mid + 1), fade = 1 - clamp01((a - 450) / 450);
+        for (let i = 0; i < LED.n; i++) if (Math.abs(i - LED.mid) < r) ledMix(i, LED_AMBER, 0.85, fade);
+      } else if (e.type === 'purple' && a < 1800) {               // purple: white-edged wipe, twinkle, fade
+        const r = ease.outCubic(clamp01(a / 380)) * (LED.mid + 1), fade = 1 - clamp01((a - 1450) / 350), slot = (a / 55) | 0;
+        for (let i = 0; i < LED.n; i++) {
+          const dist = Math.abs(i - LED.mid); if (dist >= r) continue;
+          const spark = (a < 380 && r - dist < 1.2) || (a >= 380 && hash2(i * 31 + e.seed, slot) > 0.72);
+          ledMix(i, spark ? LED_SPARK : LED_PURPLE, spark ? 1 : 0.8, fade);
+        }
+      } else if (e.type === 'lap' && e.best && a < 2200) {        // best lap: purple / white chase, then fade
+        const fade = 1 - clamp01((a - 1800) / 400), step = (a / 70) | 0;
+        for (let i = 0; i < LED.n; i++) { const w = (i + step) % 3 === 0; ledMix(i, w ? LED_WHITE : LED_PURPLE, w ? 1 : 0.85, fade); }
+      } else if (e.type === 'lap' && !e.best && a < 600) {        // ordinary lap: one white sweep, right to left like the flag
+        const x = (LED.n + 1) * (1 - a / 600) - 1;
+        for (let i = 0; i < LED.n; i++) ledMix(i, LED_WHITE, 0.9, Math.max(0, 1 - Math.abs(i - x)));
+      } else if (e.type === 'overheat' && a < 2400) {             // over temperature: the outer pairs strobe red
+        const on = ((a / 125) | 0) & 1 ? 0 : 1;
+        for (const i of [0, 1, LED.n - 2, LED.n - 1]) ledMix(i, LED_RED, on, 1);
+      }
+    }
+  }
+  function ledBoot(now) {                                         // boot: a purple comet sweeping end to end
+    const x = LED.mid - LED.mid * Math.cos((now - ui.bootT0) / 260);
+    for (let i = 0; i < LED.n; i++) ledMix(i, LED_PURPLE, 0.9 * Math.max(0, 1 - Math.abs(i - x) / 1.6), 1);
+  }
+  function ledFrame(now) {
+    ledV.fill(0);
+    if (LED.on) { if (ui.mode === 'boot') ledBoot(now); else { ledPace(now); ledFx(now); } }
+    for (let i = 0; i < LED.n; i++) {
+      const o = i * 3;
+      for (let ch = 0; ch < 3; ch++) LED.buf[o + [1, 0, 2][ch]] = Math.round(255 * LED.bright * Math.pow(clamp01(ledV[o + ch]), 2.2));   // R,G,B → G,R,B
+    }
+  }
   let shakeNow = 0;
   function renderFrame(now) {                     // one UI tick
     fbClear(0);
     if (ui.theme === 'A') { if (ui.mode === 'boot') renderBootA(now); else renderLiveA(now); shakeNow = postFxA(now); }
     else { if (ui.mode === 'boot') renderBootB(now); else renderLiveB(now); shakeNow = postFxB(now); }
+    ledFrame(now);
     while (fx.length && now - fx[0].t0 > 2600) fx.shift();
   }
 
@@ -1035,7 +1116,7 @@ h1{border-left:4px solid var(--accent);padding-left:12px}
   }
   function reboot() { ui.mode = 'boot'; ui.bootT0 = demo.uiNow; ui.rpmShown = 0; fx.length = 0; }
   reboot();
-  window.perchDemo = { sim, fx, ui, demo, fb, reboot, endLap, endSector, pushFx };   // poke at it from the console
+  window.perchDemo = { sim, fx, ui, demo, fb, LED, reboot, endLap, endSector, pushFx };   // poke at it from the console
 
   // ------------------------------------------------------------------
   //  3D
@@ -1058,6 +1139,7 @@ h1{border-left:4px solid var(--accent);padding-left:12px}
     metal: new THREE.MeshStandardMaterial({ color: 0xd2d6da, roughness: 0.35, metalness: 0.55 }),
     chip:  new THREE.MeshStandardMaterial({ color: 0x1b1f24, roughness: 0.5, metalness: 0.1 }),
     tape:  new THREE.MeshStandardMaterial({ color: 0xf08a24, transparent: true, opacity: 0.85, roughness: 0.6 }),
+    ledBody: new THREE.MeshStandardMaterial({ color: 0xf4f3ee, roughness: 0.5, metalness: 0 }),
     edge:  new THREE.LineBasicMaterial({ color: 0x2b3a49, transparent: true, opacity: 0.55 }),
     va:    new THREE.LineBasicMaterial({ color: 0x1f78c1 }),
     aa:    new THREE.LineBasicMaterial({ color: 0xe0781f })
@@ -1200,6 +1282,54 @@ h1{border-left:4px solid var(--accent);padding-left:12px}
     cyl.rotation.x = Math.PI / 2; cyl.position.set(x, P.peg_y, -D.total_t - P.peg_len / 2 + 0.025); G.pegs.add(cyl);
   }
 
+  // ---- LED bar. On the PCB, so it stays put when the module rolls for the 6 o'clock mount and rides with the pins
+  //      in the exploded view. Lens colour, halo, glint and the coloured light on the module all come from LED.buf. ----
+  const ledBar = new THREE.Group(); ledBar.position.set(-P.lb_w / 2, -P.lb_h / 2, 0); scene.add(ledBar); G.rgb = ledBar;
+  function glowTex(streaks) {
+    const c = document.createElement('canvas'); c.width = c.height = 128; const g = c.getContext('2d');
+    const blob = () => { const gr = g.createRadialGradient(0, 0, 0, 0, 0, 64); gr.addColorStop(0, 'rgba(255,255,255,1)'); gr.addColorStop(0.12, 'rgba(255,255,255,0.85)'); gr.addColorStop(0.3, 'rgba(255,255,255,0.45)'); gr.addColorStop(0.6, 'rgba(255,255,255,0.12)'); gr.addColorStop(1, 'rgba(255,255,255,0)'); g.fillStyle = gr; g.fillRect(-64, -64, 128, 128); };
+    g.translate(64, 64);
+    if (!streaks) blob(); else for (const [sx, sy] of [[1, 0.05], [0.05, 1], [0.3, 0.3]]) { g.save(); g.scale(sx, sy); blob(); g.restore(); }   // glint: two streaks and a core
+    const tx = new THREE.CanvasTexture(c); tx.minFilter = THREE.LinearFilter; return tx;
+  }
+  const haloTex = glowTex(false), flareTex = glowTex(true);
+  const ledY = P.lb_h + LEDBAR.gap, ledZ = -D.total_t, ledTop = ledZ + LEDBAR.h, ledHalf = LEDBAR.size / 2;
+  const ledOff = new THREE.Color(0xe8e4d6);                       // unlit diffuser
+  const ledMeshes = [];
+  for (let i = 0; i < LEDBAR.n; i++) {
+    const x = ledX(i);
+    ledBar.add(box(x - ledHalf, x + ledHalf, ledY - ledHalf, ledY + ledHalf, ledZ, ledTop - 0.02, mat.ledBody, true));
+    const lens = new THREE.Mesh(new THREE.PlaneGeometry(LEDBAR.size - 0.3, LEDBAR.size - 0.3), new THREE.MeshBasicMaterial({ color: ledOff.clone() }));
+    lens.position.set(x, ledY, ledTop);
+    const halo = new THREE.Sprite(new THREE.SpriteMaterial({ map: haloTex, transparent: true, depthWrite: false }));
+    const flare = new THREE.Sprite(new THREE.SpriteMaterial({ map: flareTex, transparent: true, depthWrite: false }));
+    halo.position.set(x, ledY, ledTop + 0.4); flare.position.set(x, ledY, ledTop + 0.45); halo.visible = flare.visible = false;
+    ledBar.add(lens, halo, flare); ledMeshes.push({ lens, halo, flare });
+  }
+  const ledLights = [1, 4, 7].map(i => { const l = new THREE.PointLight(0xffffff, 0, 34, 2); l.position.set(ledX(i), ledY, ledTop + 2); ledBar.add(l); return l; });
+  function ledLook(i) {                                           // LED.buf → how it reads: intensity, hue, camera-ish colour
+    const o = i * 3, r = LED.buf[o + 1] / 255, g = LED.buf[o] / 255, b = LED.buf[o + 2] / 255, I = Math.max(r, g, b);
+    if (I <= 0) return null;
+    const h = [r / I, g / I, b / I], w = clamp01((I - 0.2) / 0.5) * 0.65;   // bright LEDs blow out toward white, as a camera sees them
+    return { I, r, g, b, h, c: h.map(v => v + (1 - v) * w), v: Math.pow(I / LED.bright, 1 / 2.2) };   // v: the level the effect asked for
+  }
+  function ledShow(t) {
+    const sum = [[0, 0, 0], [0, 0, 0], [0, 0, 0]];
+    for (let i = 0; i < LEDBAR.n; i++) {
+      const m = ledMeshes[i], L = ledLook(i);
+      if (!L) { m.lens.material.color.copy(ledOff); m.halo.visible = m.flare.visible = false; continue; }
+      const k = Math.min(1, Math.sqrt(L.I) * 2.2), sI = Math.sqrt(L.I);
+      m.lens.material.color.setRGB(ledOff.r + (L.c[0] - ledOff.r) * k, ledOff.g + (L.c[1] - ledOff.g) * k, ledOff.b + (L.c[2] - ledOff.b) * k);
+      m.halo.visible = true; m.halo.material.color.setRGB(L.h[0], L.h[1], L.h[2]); m.halo.material.opacity = Math.min(1, 0.35 + 1.6 * sI);
+      const hs = 6 + 22 * sI; m.halo.scale.set(hs, hs, 1);
+      const fl = clamp01((L.v - 0.86) / 0.14); m.flare.visible = fl > 0;
+      if (fl > 0) { m.flare.material.color.setRGB(L.c[0], L.c[1], L.c[2]); m.flare.material.opacity = fl; m.flare.material.rotation = t / 1400 + i * 0.7; const fs = 14 + 18 * sI; m.flare.scale.set(fs, fs, 1); }
+      const S = sum[Math.min(2, (i / 3) | 0)]; S[0] += L.r; S[1] += L.g; S[2] += L.b;
+    }
+    ledLights.forEach((l, j) => { const S = sum[j], s = Math.max(S[0], S[1], S[2]); l.intensity = s * 1.6; if (s > 0) l.color.setRGB(S[0] / s, S[1] / s, S[2] / s); });
+    if (real.on) realLedShow();
+  }
+
   // ---- grid (rebuilt on theme change so its colours follow the tokens) ----
   let grid = null;
   function makeGrid() {
@@ -1312,6 +1442,17 @@ h1{border-left:4px solid var(--accent);padding-left:12px}
   const realCal = document.getElementById('realCal'), realCalBtn = document.getElementById('realCalBtn'), realPx = document.getElementById('realPx'), realPxVal = document.getElementById('realPxVal');
   const CARD_MM = 85.60, CARD_H_MM = 53.98;
   const real = { on: false, ppm: 0, calibrated: false };
+  const realLeds = [];
+  for (let i = 0; i < LEDBAR.n; i++) { const d = document.createElement('div'); d.className = 'm-led'; document.getElementById('realMod').appendChild(d); realLeds.push(d); }
+  function realLedShow() {
+    realLeds.forEach((d, i) => {
+      d.hidden = !ledBar.visible; const L = ledLook(i);
+      if (!L || d.hidden) { d.style.background = ''; d.style.boxShadow = ''; return; }
+      const sI = Math.sqrt(L.I), k = Math.min(1, sI * 2.2), mix = (o, c) => Math.round(255 * (o + (c - o) * k));
+      d.style.background = `rgb(${mix(ledOff.r, L.c[0])},${mix(ledOff.g, L.c[1])},${mix(ledOff.b, L.c[2])})`;
+      d.style.boxShadow = `inset 0 0 0 1px rgba(0,0,0,.12),0 0 ${((1 + 5 * sI) * real.ppm).toFixed(1)}px ${((0.4 * sI) * real.ppm).toFixed(1)}px rgba(${L.h.map(v => Math.round(v * 255)).join(',')},${Math.min(0.9, 0.25 + 1.2 * sI).toFixed(2)})`;
+    });
+  }
   function realKey() {
     const d = window.devicePixelRatio || 1, a = Math.round(screen.width * d), b = Math.round(screen.height * d);
     return 'wo240128a.devPxPerMm.' + Math.min(a, b) + 'x' + Math.max(a, b);
@@ -1332,6 +1473,8 @@ h1{border-left:4px solid var(--accent);padding-left:12px}
     place(document.getElementById('realGlass'), D.lcd_x0, (P.lb_h - P.lcd_h) / 2, P.lcd_w, P.lcd_h);
     const va = document.getElementById('realVA'); place(va, P.va_x0, P.va_ytop, P.va_w, P.va_h); va.style.background = `rgb(${lut[0]},${lut[1]},${lut[2]})`;
     place(realAA, P.aa_x0, P.aa_ytop, P.aa_w, P.aa_h);
+    realLeds.forEach((d, i) => place(d, ledX(i) - LEDBAR.size / 2, -LEDBAR.gap - LEDBAR.size / 2, LEDBAR.size, LEDBAR.size));
+    mod.style.marginTop = (LEDBAR.gap + LEDBAR.size) * k + 'px';
     document.getElementById('realBar').style.width = 10 * k + 'px';
     const card = document.getElementById('realCard'); card.style.width = CARD_MM * k + 'px'; card.style.height = CARD_H_MM * k + 'px'; card.style.borderRadius = 3.18 * k + 'px';
     realPx.value = k.toFixed(2); realPxVal.textContent = k.toFixed(2) + ' px/mm';
@@ -1471,7 +1614,7 @@ h1{border-left:4px solid var(--accent);padding-left:12px}
   document.getElementById('views').addEventListener('click', e => { const b = e.target.closest('[data-view]'); if (b) setView(b.dataset.view, false); });
   document.getElementById('cam').addEventListener('click', e => { const b = e.target.closest('[data-cam]'); if (b) { setCam(b.dataset.cam); hint.classList.add('gone'); } });
   const explode = document.getElementById('explode'), explodeVal = document.getElementById('explodeVal');
-  explode.addEventListener('input', () => { const v = parseFloat(explode.value); explodeVal.textContent = `${v} mm`; moving.frame.position.z = -v; moving.rear.position.z = -2 * v; });
+  explode.addEventListener('input', () => { const v = parseFloat(explode.value); explodeVal.textContent = `${v} mm`; moving.frame.position.z = -v; moving.rear.position.z = -2 * v; ledBar.position.z = -2 * v; });
   document.querySelectorAll('#parts input').forEach(cb => cb.addEventListener('change', () => { G[cb.dataset.part].visible = cb.checked; cb.parentElement.classList.toggle('on', cb.checked); }));
   document.querySelectorAll('#opts input').forEach(cb => cb.addEventListener('change', () => {
     cb.parentElement.classList.toggle('on', cb.checked); const o = cb.dataset.opt;
@@ -1518,6 +1661,9 @@ h1{border-left:4px solid var(--accent);padding-left:12px}
   fstnCb.addEventListener('change', () => { demo.fstn = fstnCb.checked; fstnCb.parentElement.classList.toggle('on', fstnCb.checked); });
   const vangleCb = document.getElementById('vangle');
   vangleCb.addEventListener('change', () => { aaMat.uniforms.uAngle.value = vangleCb.checked ? 1 : 0; vangleCb.parentElement.classList.toggle('on', vangleCb.checked); });
+  const ledOnCb = document.getElementById('ledOn'), ledBright = document.getElementById('ledBright'), ledBrightVal = document.getElementById('ledBrightVal');
+  ledOnCb.addEventListener('change', () => { LED.on = ledOnCb.checked; ledOnCb.parentElement.classList.toggle('on', ledOnCb.checked); ledFrame(demo.uiNow); });
+  ledBright.addEventListener('input', () => { LED.bright = parseInt(ledBright.value, 10) / 100; ledBrightVal.textContent = ledBright.value + ' %'; ledFrame(demo.uiNow); });
   const flipCb = document.getElementById('flip');
   flipCb.addEventListener('change', () => { demoOpts.flip = flipCb.checked; aaMat.uniforms.uFlip.value = flipCb.checked ? 1 : 0; flipCb.parentElement.classList.toggle('on', flipCb.checked); buildLut();
     for (const m of [vaPlane, aaPlane, gapPlane]) m.rotation.z = flipCb.checked ? Math.PI : 0;   // image mirrored back upright, as the UC1608 would
@@ -1538,6 +1684,8 @@ h1{border-left:4px solid var(--accent);padding-left:12px}
     renderer.setClearColor(new THREE.Color(css('--bg3d')));
     makeGrid();
     mat.edge.color.set(css('--edge')); mat.va.color.set(css('--va')); mat.aa.color.set(css('--aa'));
+    const bg = new THREE.Color(css('--bg3d')), dark = 0.2126 * bg.r + 0.7152 * bg.g + 0.0722 * bg.b < 0.4;   // additive glow vanishes on a light ground
+    for (const m of ledMeshes) for (const s of [m.halo, m.flare]) { s.material.blending = dark ? THREE.AdditiveBlending : THREE.NormalBlending; s.material.needsUpdate = true; }
   }
   applyTheme();
   const mq = window.matchMedia('(prefers-color-scheme: dark)'); if (mq.addEventListener) mq.addEventListener('change', applyTheme);
@@ -1566,6 +1714,7 @@ h1{border-left:4px solid var(--accent);padding-left:12px}
         if (performance.now() - wheel.lastEvent > 3000) wheelRead.textContent = 'Gyro stopped sending events';
       }
     }
+    ledShow(t);
     const tl = performance.now(); updateLcd(dt); demo.lcdMs = demo.lcdMs * 0.9 + (performance.now() - tl) * 0.1;
     if (t - statT > 500) { statT = t; statEl.textContent = `${demo.fps} Hz · JS here: draw ${demo.renderMs.toFixed(2)} ms, panel sim ${demo.lcdMs.toFixed(1)} ms`; }
     if (!demoOpts.flat) {
