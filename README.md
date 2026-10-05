@@ -26,7 +26,7 @@ stays correct. Pinch-zoom on a phone breaks the scale; the bar says so.
 
 `pcb-handoff/` is the package for the PCB engineer: a dimensioned PDF (footprint, pin-row detail,
 LED + button placement, 1:1 check print, notes), a layered DXF, a KiCad footprint (origin pin 1)
-and coordinate CSVs for the holes, both LED layouts and the buttons. `src/make_handoff.py`
+and coordinate CSVs for the holes, the LEDs and the buttons. `src/make_handoff.py`
 regenerates it from the .scad (`pip install ezdxf reportlab`).
 
 ## GitHub Pages
@@ -177,7 +177,7 @@ layout inside `fbFill`/`fbPx`, and emit `F57` and `LOGO_SRC` as `const uint8_t[]
   outer package edges are flush with the outline (the drawing's 98.7): pitch =
   (98.7 − 2.0) / 6 = 16.1167 mm for the 2020, 15.6167 for the 5050. Layout B fills the
   middle 5, so they bunch in the middle at the same pitch. The side columns sit `side`
-  (5.0) out from the outline's sides, level with the AA's top / middle / bottom
+  (5.5, confirmed) out from the outline's sides, level with the AA's top / middle / bottom
   (`aaLevels`); `gap` (3.0, outline top edge → top row) and `side` are placeholders until
   the PCB exists. `LED_PKG` switches the 2020 (2.0 × 2.0 × 0.84, height from memory of its
   datasheet; check it) and the 5050 (5.0 × 5.0 × 1.6). The LEDs sit on the PCB plane (the

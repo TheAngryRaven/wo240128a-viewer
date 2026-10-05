@@ -6,9 +6,9 @@ PCB handoff for the WO240128A module + the LED / button layout.
 
 Reads the module dimensions from scad/WO240128A_240x128_COG.scad (one source of truth) and writes pcb-handoff/:
     WO240128A_pcb_handoff.pdf   dimensioned drawings: footprint, pin-row detail, LED / button placement, 1:1 check, notes
-    WO240128A_pcb.dxf           layers: OUTLINE, COURTYARD, PTH, NPTH, VA, AA, LEDS_B, LEDS_A, BUTTONS, TEXT (mm, LB corner)
+    WO240128A_pcb.dxf           layers: OUTLINE, COURTYARD, PTH, NPTH, VA, AA, LEDS, BUTTONS, TEXT (mm, LB corner)
     WO240128A_COG.kicad_mod     KiCad footprint, origin at pin 1
-    holes.csv, leds_layout_B.csv, leds_layout_A.csv, buttons.csv
+    holes.csv, leds.csv, buttons.csv
 Frame: X right, Y up, origin at the bottom-left corner of the 98.7 x 67.7 outline, seen from the front (= the PCB's top side
 when the module sits on it). The LED / button numbers come from the viewer (LEDBAR in src/viewer.template.html).
 """
@@ -37,8 +37,8 @@ LED_SLOT, LED_PAD = (2.3, 1.0), (3.0, 1.6)   # 1.8 x 0.5 A/K tabs (slot as in th
 PEG_DRILL = 1.6                              # NPTH for the dia 1.5 pegs
 KEEPOUT = P["keepout"]
 
-# ---- LED / button layout (viewer: LEDBAR, layout B default, WS2812B-2020) ----
-LED_SIZE, LED_GAP, LED_SIDE, SLOTS = 2.0, 3.0, 5.0, 7
+# ---- LED / button layout (confirmed: 5 top + 3 + 3, WS2812B-2020; side columns 5.5 out, confirmed; top gap 3.0 still a placeholder) ----
+LED_SIZE, LED_GAP, LED_SIDE, SLOTS = 2.0, 3.0, 5.5, 7
 pitch = (P["lb_w"] - LED_SIZE) / (SLOTS - 1)
 aa = {"top": P["aa_y0"] + P["aa_h"], "mid": P["aa_cy"], "bot": P["aa_y0"]}
 def led_layout(top_slots, side_levels):
@@ -47,7 +47,6 @@ def led_layout(top_slots, side_levels):
     pts += [("R", P["lb_w"] + LED_SIDE, aa[l]) for l in side_levels]
     return [(f"D{i+1}", s, x, y) for i, (s, x, y) in enumerate(pts)]   # chain order = DIN-to-DOUT order
 LAYOUT_B = led_layout([1, 2, 3, 4, 5], ["top", "mid", "bot"])
-LAYOUT_A = led_layout([0, 1, 2, 3, 4, 5, 6], ["mid", "bot"])
 BUTTONS = [(f"SW{i+1}", x, (aa["top"] + aa["mid"]) / 2 if j == 0 else (aa["mid"] + aa["bot"]) / 2)
            for i, (x, j) in enumerate([(-LED_SIDE, 0), (-LED_SIDE, 1), (P["lb_w"] + LED_SIDE, 0), (P["lb_w"] + LED_SIDE, 1)])]
 SIDE_CC = aa["top"] - aa["mid"]
@@ -66,7 +65,7 @@ def write_csv():
     with open(OUT / "holes.csv", "w", newline="") as f:
         w = csv.writer(f); w.writerow(["name", "type", "x_mm", "y_mm", "x_from_pin1", "y_from_pin1", "hole", "pad (recommended)"])
         for n, t, x, y, d, pad in holes(): w.writerow([n, t, f"{x:.4f}", f"{y:.4f}", f"{x - p1x:.4f}", f"{y - p1y:.4f}", d, pad])
-    for name, lay in (("leds_layout_B.csv", LAYOUT_B), ("leds_layout_A.csv", LAYOUT_A)):
+    for name, lay in (("leds.csv", LAYOUT_B),):
         with open(OUT / name, "w", newline="") as f:
             w = csv.writer(f); w.writerow(["designator (chain order)", "group", "x_mm", "y_mm", "x_from_pin1", "y_from_pin1", "rotation", "package"])
             for d, s, x, y in lay: w.writerow([d, {"L": "left column", "T": "top row", "R": "right column"}[s], f"{x:.4f}", f"{y:.4f}", f"{x - p1x:.4f}", f"{y - p1y:.4f}", 0, "WS2812B-2020 (2.0 x 2.0)"])
@@ -77,7 +76,7 @@ def write_csv():
 # ---------------------------------------------------------------- DXF
 def write_dxf():
     doc = ezdxf.new("R2010", setup=True); doc.units = ezdxf.units.MM; msp = doc.modelspace()
-    for name, col in [("OUTLINE", 7), ("COURTYARD", 8), ("PTH", 1), ("NPTH", 5), ("VA", 4), ("AA", 30), ("LEDS_B", 3), ("LEDS_A", 6), ("BUTTONS", 2), ("TEXT", 7)]:
+    for name, col in [("OUTLINE", 7), ("COURTYARD", 8), ("PTH", 1), ("NPTH", 5), ("VA", 4), ("AA", 30), ("LEDS", 3), ("BUTTONS", 2), ("TEXT", 7)]:
         doc.layers.add(name, color=col)
     rect = lambda x0, y0, x1, y1, layer: msp.add_lwpolyline([(x0, y0), (x1, y0), (x1, y1), (x0, y1)], close=True, dxfattribs={"layer": layer})
     rect(0, 0, P["lb_w"], P["lb_h"], "OUTLINE")
@@ -90,7 +89,7 @@ def write_dxf():
         else:                                            # rounded slot as a closed polyline with bulges
             hw, r = LED_SLOT[0] / 2 - LED_SLOT[1] / 2, LED_SLOT[1] / 2
             msp.add_lwpolyline([(x - hw, y - r, 0, 0, 0), (x + hw, y - r, 0, 0, 1), (x + hw, y + r, 0, 0, 0), (x - hw, y + r, 0, 0, 1)], format="xyseb", close=True, dxfattribs={"layer": "PTH"})
-    for lay, layer in ((LAYOUT_B, "LEDS_B"), (LAYOUT_A, "LEDS_A")):
+    for lay, layer in ((LAYOUT_B, "LEDS"),):
         for d, s, x, y in lay:
             rect(x - LED_SIZE / 2, y - LED_SIZE / 2, x + LED_SIZE / 2, y + LED_SIZE / 2, layer)
             msp.add_line((x - 0.4, y), (x + 0.4, y), dxfattribs={"layer": layer}); msp.add_line((x, y - 0.4), (x, y + 0.4), dxfattribs={"layer": layer})
@@ -241,12 +240,10 @@ def page_detail(c):
     c.showPage()
 
 def page_leds(c):
-    frame(c, "LED + button placement — layout B (5 top + 3 + 3)", "11 × WS2812B-2020 on the PCB top side, D1–D11 in data-chain order", "scale 1.6:1", 3, 5)
+    frame(c, "LED + button placement — 5 top + 3 + 3 (confirmed)", "11 × WS2812B-2020 on the PCB top side, D1–D11 in data-chain order", "scale 1.6:1", 3, 5)
     sh = Sheet(c, 58, 66, 1.6); module_view(sh, holes_too=False)
     for d, s, x, y in LAYOUT_B:
         sh.rect(x - LED_SIZE / 2, y - LED_SIZE / 2, LED_SIZE, LED_SIZE, GREEN, 0.35, fill=0); sh.text(x + 1.6, y + 1.4, d, 6, GREEN)
-    for d, s, x, y in LAYOUT_A:                                       # the two extra top positions of layout A, ghosted
-        if s == "T" and (abs(x - LED_SIZE / 2) < 0.01 or abs(x - (P["lb_w"] - LED_SIZE / 2)) < 0.01): sh.rect(x - LED_SIZE / 2, y - LED_SIZE / 2, LED_SIZE, LED_SIZE, GREY, 0.2, dash=[1, 1])
     for d, x, y in BUTTONS:
         sh.col(ORANGE, 0.3); c.line(sh.X(x - 1.5), sh.Y(y), sh.X(x + 1.5), sh.Y(y)); c.line(sh.X(x), sh.Y(y - 1.5), sh.X(x), sh.Y(y + 1.5)); sh.text(x + (2 if x > 0 else -2), y - 0.6, d, 6, ORANGE, "l" if x > 0 else "r")
     T = [q for q in LAYOUT_B if q[1] == "T"]; Lc = sorted([q for q in LAYOUT_B if q[1] == "L"], key=lambda q: q[3])
@@ -255,16 +252,16 @@ def page_leds(c):
     sh.dim((0, P["lb_h"]), (T[0][2], P["lb_h"]), 9, f"{T[0][2]:.3f}")
     sh.dim((P["lb_w"], P["lb_h"]), (P["lb_w"], ytop), -3, f"{LED_GAP}*")
     sh.dim((Lc[0][2], Lc[0][3]), (Lc[1][2], Lc[1][3]), 4, f"{SIDE_CC:.2f}"); sh.dim((Lc[1][2], Lc[1][3]), (Lc[2][2], Lc[2][3]), 4, f"{SIDE_CC:.2f}")
-    sh.dim((Lc[0][2], 0), (0, 0), 5, f"{LED_SIDE}*")
+    sh.dim((Lc[0][2], 0), (0, 0), 5, f"{LED_SIDE}")
     sh.dim((P["lb_w"] + LED_SIDE, 0), (P["lb_w"] + LED_SIDE, Lc[0][3]), -6, f"{Lc[0][3]:.3f} (AA bottom)")
     sh.dim((P["lb_w"] + LED_SIDE, 0), (P["lb_w"] + LED_SIDE, Lc[1][3]), -11, f"{Lc[1][3]:.2f} (AA middle)")
     sh.dim((P["lb_w"] + LED_SIDE, 0), (P["lb_w"] + LED_SIDE, Lc[2][3]), -16, f"{Lc[2][3]:.3f} (AA top)")
     c.setFont("Helvetica", 7); c.setFillColorRGB(*INK)
-    notes = [f"Top row: 5 of 7 positions on a {pitch:.4f} pitch; the 7 would sit flush with the outline (grey = the 2 extra of layout A).",
-             f"Side columns {LED_SIDE} mm out from the outline, level with the AA top / middle / bottom; {SIDE_CC:.2f} c–c, {SIDE_CC - LED_SIZE:.2f} clear for the buttons.",
+    notes = [f"Top row: 5 LEDs on a {pitch:.4f} pitch, centred (the pitch of 7 spanning the outline edge to edge; the outer two are not fitted).",
+             f"Side columns (LEDs and buttons) {LED_SIDE} mm out from the outline, level with the AA top / middle / bottom; {SIDE_CC:.2f} c–c, {SIDE_CC - LED_SIZE:.2f} clear for the buttons.",
              "SW1–SW4: suggested button centres, midway between side LEDs. Chain: up the left column, along the top, down the right.",
-             "* placeholders until the enclosure is drawn: top-row gap above the outline (3.0) and side-column offset (5.0).",
-             "The LEDs sit on the PCB, 5.7 mm below the glass front face: plan light pipes or a stepped bezel. Full list: leds_layout_B.csv / _A.csv."]
+             "* placeholder until the enclosure is drawn: top-row gap above the outline (3.0). The side offset (5.5) is confirmed.",
+             "The LEDs sit on the PCB, 5.7 mm below the glass front face: plan light pipes or a stepped bezel. Full list: leds.csv."]
     for i, s in enumerate(notes): c.drawString(18 * mm, (54 - i * 3.6) * mm, s)
     c.showPage()
 
@@ -290,10 +287,10 @@ def page_notes(c):
              ("b", "Recommended (ours): drill and pad sizes — " + f"signal Ø{PIN_DRILL} / {PIN_PAD[0]}×{PIN_PAD[1]} oval, A/K slot {LED_SLOT[0]}×{LED_SLOT[1]} / {LED_PAD[0]}×{LED_PAD[1]}, pegs NPTH Ø{PEG_DRILL}."),
              ("", "If your fab's minimum annular ring or slot rules differ, keep the hole centres and adjust sizes."),
              ("b", "LEDs: 11 × WS2812B-2020 (2.0 × 2.0 × ~0.84), chain D1→D11 = up the left column, along the top, down the right."),
-             ("", "Roles in firmware: top row = pace, side columns = status (overheat, rev limit, grip), all = purple sector / best lap."),
+             ("", "Layout confirmed: 5 on top, 3 per side; side LEDs and buttons 5.5 out from the outline. Roles in firmware: top row = pace, side columns = status (overheat, rev limit, grip), all = purple sector / best lap."),
              ("", "Budget ~15 mA per LED at full white (5 mA/colour 2020 types; some are 12 mA/colour — check the part), ~0.5–1 mA idle each."),
              ("", "Consider a load switch on the LED 5 V rail so firmware can cut the idle current, and a 3.3 V→5 V level shifter on DIN."),
-             ("b", "Files: holes.csv (from pin 1 and from the corner), leds_layout_B/A.csv, buttons.csv, WO240128A_pcb.dxf (layered),"),
+             ("b", "Files: holes.csv (from pin 1 and from the corner), leds.csv, buttons.csv, WO240128A_pcb.dxf (layered),"),
              ("", "WO240128A_COG.kicad_mod (origin pin 1), plus ../scad (OpenSCAD source: footprint / bezel modes) and ../exports (STL, DXF)."),
              ("", "Regenerate after any change: python3 src/make_handoff.py (reads the .scad).")]
     for kind, s in lines:
