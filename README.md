@@ -22,6 +22,13 @@ and **Calibrate** matches a bank card (85.60 mm). The result is stored in `local
 as device px per mm, keyed by the screen's device-pixel size, so desktop browser zoom
 stays correct. Pinch-zoom on a phone breaks the scale; the bar says so.
 
+## PCB handoff
+
+`pcb-handoff/` is the package for the PCB engineer: a dimensioned PDF (footprint, pin-row detail,
+LED + button placement, 1:1 check print, notes), a layered DXF, a KiCad footprint (origin pin 1)
+and coordinate CSVs for the holes, both LED layouts and the buttons. `src/make_handoff.py`
+regenerates it from the .scad (`pip install ezdxf reportlab`).
+
 ## GitHub Pages
 
 `.github/workflows/pages.yml` rebuilds the pages from `src/` on every push to `main` and

@@ -1,0 +1,5 @@
+designator,x_mm,y_mm,x_from_pin1,y_from_pin1,note
+SW1,-5.0000,50.3938,-40.3800,49.1688,centred between side LEDs; 20.39 mm clear between LED bodies
+SW2,-5.0000,28.0063,-40.3800,26.7813,centred between side LEDs; 20.39 mm clear between LED bodies
+SW3,103.7000,50.3938,68.3200,49.1688,centred between side LEDs; 20.39 mm clear between LED bodies
+SW4,103.7000,28.0063,68.3200,26.7813,centred between side LEDs; 20.39 mm clear between LED bodies
