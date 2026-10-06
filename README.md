@@ -26,8 +26,9 @@ stays correct. Pinch-zoom on a phone breaks the scale; the bar says so.
 
 `pcb-handoff/` is the package for the PCB engineer: a dimensioned PDF (footprint, pin-row detail,
 LED + button placement, 1:1 check print, notes), a layered DXF, a KiCad footprint (origin pin 1)
-and coordinate CSVs for the holes, the LEDs and the buttons. `src/make_handoff.py`
-regenerates it from the .scad (`pip install ezdxf reportlab`).
+coordinate CSVs for the holes, the LEDs and the buttons, and STEP models (the display, the footprint
+on a reference board, and both together). `src/make_handoff.py` regenerates it from the .scad
+(`pip install ezdxf reportlab`); `src/make_step.py` writes the STEP files (`pip install cadquery`).
 
 ## GitHub Pages
 
